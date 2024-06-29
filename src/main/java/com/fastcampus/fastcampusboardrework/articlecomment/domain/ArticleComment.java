@@ -1,12 +1,20 @@
 package com.fastcampus.fastcampusboardrework.articlecomment.domain;
 
 import com.fastcampus.fastcampusboardrework.article.domain.Article;
+import com.fastcampus.fastcampusboardrework.common.config.BaseEntity;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-public class ArticleComment {
+public class ArticleComment extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -17,11 +25,26 @@ public class ArticleComment {
 
     private String content;
 
-    private LocalDateTime createdAt;
+    @Builder
+    public ArticleComment(Long id, Article article, String content, LocalDateTime createdAt, String createdBy, LocalDateTime modifiedAt, String modifiedBy) {
+        this.id = id;
+        this.article = article;
+        this.content = content;
+        this.createdAt = createdAt;
+        this.createdBy = createdBy;
+        this.modifiedAt = modifiedAt;
+        this.modifiedBy = modifiedBy;
+    }
 
-    private String createdBy;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ArticleComment that)) return false;
+        return Objects.equals(getId(), that.getId());
+    }
 
-    private LocalDateTime modifiedAt;
-
-    private String modifiedBy;
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(getId());
+    }
 }

@@ -4,6 +4,7 @@ logging:
   level:
     org.springframework.web.servlet: debug
     org.hibernate.SQL: debug
+    org.hibernate.type.descriptor.sql.BasicBinder: trace
 spring:
   config:
     activate:
@@ -16,7 +17,7 @@ spring:
   jpa:
     defer-datasource-initialization: false
     hibernate:
-      ddl-auto: create
+      ddl-auto: none
     properties:
       hibernate:
         format_sql: true

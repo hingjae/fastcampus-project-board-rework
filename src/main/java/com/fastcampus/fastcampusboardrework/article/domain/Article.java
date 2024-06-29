@@ -1,27 +1,51 @@
 package com.fastcampus.fastcampusboardrework.article.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import com.fastcampus.fastcampusboardrework.articlecomment.domain.ArticleComment;
+import com.fastcampus.fastcampusboardrework.common.config.BaseEntity;
+import jakarta.persistence.*;
+import lombok.*;
 
-import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
+import java.util.Objects;
+import java.util.Set;
 
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-public class Article {
+public class Article extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String title;
+    @Setter private String title;
+
+    @Setter private String content;
 
     private String hashtag;
 
-    private LocalDateTime createdAt;
+    @OneToMany(mappedBy = "article", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("id")
+    @ToString.Exclude
+    private Set<ArticleComment> articleComments = new LinkedHashSet<>();
 
-    private String createdBy;
+    @Builder
+    public Article(Long id, String title, String content, String hashtag, Set<ArticleComment> articleComments) {
+        this.id = id;
+        this.title = title;
+        this.content = content;
+        this.hashtag = hashtag;
+        this.articleComments = articleComments;
+    }
 
-    private LocalDateTime modifiedAt;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Article article)) return false;
+        return Objects.equals(id, article.id);
+    }
 
-    private String modifiedBy;
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id);
+    }
 }
