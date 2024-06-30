@@ -3,10 +3,7 @@ package com.fastcampus.fastcampusboardrework.articlecomment.domain;
 import com.fastcampus.fastcampusboardrework.article.domain.Article;
 import com.fastcampus.fastcampusboardrework.common.config.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -23,6 +20,8 @@ public class ArticleComment extends BaseEntity {
     @JoinColumn(name = "article_id")
     private Article article;
 
+    @Setter
+    @Column(length = 1000)
     private String content;
 
     @Builder

@@ -19,7 +19,7 @@ public class Article extends BaseEntity {
 
     @Setter private String title;
 
-    @Setter private String content;
+    @Setter @Column(length = 1000) private String content;
 
     private String hashtag;
 
