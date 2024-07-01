@@ -2,10 +2,10 @@ package com.fastcampus.fastcampusboardrework.articlecomment.domain;
 
 import com.fastcampus.fastcampusboardrework.article.domain.Article;
 import com.fastcampus.fastcampusboardrework.common.config.BaseEntity;
+import com.fastcampus.fastcampusboardrework.useraccount.domain.UserAccount;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Getter
@@ -16,23 +16,26 @@ public class ArticleComment extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @Setter
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "article_id")
     private Article article;
+
+    @Setter
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_account_id")
+    private UserAccount userAccount; // 유저 정보 (ID)
 
     @Setter
     @Column(length = 1000)
     private String content;
 
     @Builder
-    public ArticleComment(Long id, Article article, String content, LocalDateTime createdAt, String createdBy, LocalDateTime modifiedAt, String modifiedBy) {
+    public ArticleComment(Long id, Article article, UserAccount userAccount, String content) {
         this.id = id;
         this.article = article;
+        this.userAccount = userAccount;
         this.content = content;
-        this.createdAt = createdAt;
-        this.createdBy = createdBy;
-        this.modifiedAt = modifiedAt;
-        this.modifiedBy = modifiedBy;
     }
 
     @Override

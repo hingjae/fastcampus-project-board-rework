@@ -1,6 +1,8 @@
 package com.fastcampus.fastcampusboardrework.article.repository;
 
 import com.fastcampus.fastcampusboardrework.article.domain.Article;
+import com.fastcampus.fastcampusboardrework.useraccount.domain.UserAccount;
+import com.fastcampus.fastcampusboardrework.useraccount.repository.UserAccountRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,28 +21,42 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 class ArticleRepositoryTest {
 
     @Autowired ArticleRepository articleRepository;
+    @Autowired UserAccountRepository userAccountRepository;
 
     @DisplayName("[JPA 연결 테스트] Article을 생성한다.")
     @Test
     public void save() {
-        Article article = Article.builder()
-                .title("test title")
-                .content("test content")
-                .hashtag("test tag")
-                .build();
+        UserAccount savedUser = userAccountRepository.save(getUserAccount());
+        Article article = getArticle(savedUser);
 
         assertThatCode(() -> articleRepository.save(article))
                 .doesNotThrowAnyException();
     }
 
-    @DisplayName("[JPA 연결 테스트] Article을 조회한다.")
-    @Test
-    public void find() {
-        Article article = Article.builder()
+    private Article getArticle(UserAccount userAccount) {
+        return Article.builder()
+                .userAccount(userAccount)
                 .title("test title")
                 .content("test content")
                 .hashtag("test tag")
                 .build();
+    }
+
+    private UserAccount getUserAccount() {
+        return UserAccount.builder()
+                .userId("honey")
+                .userPassword("pw1")
+                .email("email1")
+                .nickname("nickname1")
+                .memo("memo1")
+                .build();
+    }
+
+    @DisplayName("[JPA 연결 테스트] Article을 조회한다.")
+    @Test
+    public void find() {
+        UserAccount savedUser = userAccountRepository.save(getUserAccount());
+        Article article = getArticle(savedUser);
 
         Article savedArticle = articleRepository.save(article);
 
@@ -55,11 +71,8 @@ class ArticleRepositoryTest {
     public void update() {
         String newTitle = "new title";
         String newContent = "new content";
-        Article article = Article.builder()
-                .title("test title")
-                .content("test content")
-                .hashtag("test tag")
-                .build();
+        UserAccount savedUser = userAccountRepository.save(getUserAccount());
+        Article article = getArticle(savedUser);
         Article savedArticle = articleRepository.save(article);
 
         Article findArticle = articleRepository.findById(savedArticle.getId()).get();
@@ -75,11 +88,8 @@ class ArticleRepositoryTest {
     @DisplayName("[JPA 연결 테스트] Article을 삭제한다.")
     @Test
     public void delete() {
-        Article article = Article.builder()
-                .title("test title")
-                .content("test content")
-                .hashtag("test tag")
-                .build();
+        UserAccount savedUser = userAccountRepository.save(getUserAccount());
+        Article article = getArticle(savedUser);
         Article savedArticle = articleRepository.save(article);
 
         articleRepository.deleteById(savedArticle.getId());
