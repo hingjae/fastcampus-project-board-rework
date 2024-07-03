@@ -7,7 +7,6 @@ import com.fastcampus.fastcampusboardrework.article.service.dto.ArticleCreateDto
 import com.fastcampus.fastcampusboardrework.article.service.dto.ArticleDto;
 import com.fastcampus.fastcampusboardrework.article.service.dto.ArticleModifyDto;
 import com.fastcampus.fastcampusboardrework.article.service.dto.ArticleWithCommentsDto;
-import com.fastcampus.fastcampusboardrework.articlecomment.domain.ArticleComment;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -15,23 +14,23 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Set;
-
 @RequiredArgsConstructor
 @Service
 public class ArticleService {
     private final ArticleRepository articleRepository;
 
     @Transactional(readOnly = true)
-    public Page<ArticleDto> searchArticles(SearchType searchType, String searchKeyword, Pageable pageable) {
-        return Page.empty();
+    public Page<ArticleDto> getArticlePage(SearchType searchType, String searchKeyword, Pageable pageable) {
+        return articleRepository.findArticlePageBySearchParam(searchType, searchKeyword, pageable)
+                .map(ArticleDto::from);
     }
 
     @Transactional(readOnly = true)
     public ArticleWithCommentsDto getArticle(Long articleId) {
-        return articleRepository.findByIdWithUserAccountAndArticleComments(articleId)
-                .map(ArticleWithCommentsDto::from)
+        Article article = articleRepository.findByIdWithUserAccountAndArticleComments(articleId)
                 .orElseThrow(EntityNotFoundException::new);
+
+        return ArticleWithCommentsDto.from(article);
     }
 
     @Transactional
@@ -52,5 +51,4 @@ public class ArticleService {
     public void delete(Long articleId) {
         articleRepository.deleteById(articleId);
     }
-
 }
