@@ -1,8 +1,8 @@
 package com.fastcampus.fastcampusboardrework.article.controller;
 
-import com.fastcampus.fastcampusboardrework.article.controller.dto.ArticleResponse;
-import com.fastcampus.fastcampusboardrework.article.controller.dto.ArticleWithCommentsResponse;
-import com.fastcampus.fastcampusboardrework.article.controller.dto.SearchArticleCondition;
+import com.fastcampus.fastcampusboardrework.article.controller.dto.request.SaveArticleRequest;
+import com.fastcampus.fastcampusboardrework.article.controller.dto.response.ArticleResponse;
+import com.fastcampus.fastcampusboardrework.article.controller.dto.response.ArticleWithCommentsResponse;
 import com.fastcampus.fastcampusboardrework.article.service.ArticleService;
 import com.fastcampus.fastcampusboardrework.article.service.PaginationService;
 import lombok.RequiredArgsConstructor;
@@ -42,7 +42,7 @@ public class ArticleController {
 
     @GetMapping("/{articleId}")
     public String article(@PathVariable Long articleId, Model model) {
-        ArticleWithCommentsResponse article = ArticleWithCommentsResponse.from(articleService.getArticle(articleId));
+        ArticleWithCommentsResponse article = ArticleWithCommentsResponse.from(articleService.getArticleWithComments(articleId));
 
         model.addAttribute("article", article);
         model.addAttribute("articleComments", article.articleComments());
@@ -52,7 +52,7 @@ public class ArticleController {
     }
 
     @GetMapping("/search-hashtag")
-    public String searchHashtag(
+    public String searchArticleHashtag(
             @RequestParam(required = false) String searchValue,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
             Model model
@@ -68,5 +68,46 @@ public class ArticleController {
         model.addAttribute("searchType", SearchType.HASHTAG);
 
         return "articles/search-hashtag";
+    }
+
+    @GetMapping("/create")
+    public String createArticleForm(Model model) {
+        model.addAttribute("formStatus", FormStatus.CREATE);
+
+        return "articles/form";
+    }
+
+    @PostMapping ("/create")
+    public String create(SaveArticleRequest request) {
+        // TODO: 인증 정보를 넣어줘야 한다.
+        articleService.create("userId", request.toCreateDto());
+
+        return "redirect:/articles";
+    }
+
+    @GetMapping("/{articleId}/modify")
+    public String modifyArticleForm(@PathVariable Long articleId, Model model) {
+        ArticleResponse article = ArticleResponse.from(articleService.getByIdWithUserAccount(articleId));
+
+        model.addAttribute("article", article);
+        model.addAttribute("formStatus", FormStatus.UPDATE);
+
+        return "articles/form";
+    }
+
+    @PostMapping ("/{articleId}/modify")
+    public String modify(@PathVariable Long articleId, SaveArticleRequest request) {
+        // TODO: 인증 정보를 넣어줘야 한다.
+        articleService.modify(articleId, "userId", request.toModifyDto());
+
+        return "redirect:/articles/" + articleId;
+    }
+
+    @PostMapping("/{articleId}/delete")
+    public String delete(@PathVariable Long articleId) {
+        // TODO: 인증 정보를 넣어줘야 한다.
+        articleService.delete(articleId, "userId");
+
+        return "redirect:/articles";
     }
 }

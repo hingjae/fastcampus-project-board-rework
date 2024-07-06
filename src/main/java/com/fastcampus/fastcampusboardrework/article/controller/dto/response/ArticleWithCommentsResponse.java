@@ -1,4 +1,4 @@
-package com.fastcampus.fastcampusboardrework.article.controller.dto;
+package com.fastcampus.fastcampusboardrework.article.controller.dto.response;
 
 import com.fastcampus.fastcampusboardrework.article.service.dto.ArticleWithCommentsDto;
 import lombok.Builder;

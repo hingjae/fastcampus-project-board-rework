@@ -4,7 +4,6 @@ import com.fastcampus.fastcampusboardrework.useraccount.domain.UserAccount;
 import lombok.Builder;
 
 public record UserAccountDto(
-        Long id,
         String userId,
         String userPassword,
         String email,

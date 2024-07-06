@@ -102,8 +102,8 @@ public class ArticleRepositoryImpl implements ArticleRepositoryCustom {
         return query
                 .selectDistinct(article.hashtag)
                 .from(article)
-                .limit(100)
                 .where(article.hashtag.isNotNull())
+                .limit(100)
                 .groupBy(article.hashtag)
                 .orderBy(article.hashtag.count().desc())
                 .fetch();

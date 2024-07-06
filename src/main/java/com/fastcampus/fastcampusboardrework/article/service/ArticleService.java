@@ -31,7 +31,7 @@ public class ArticleService {
     }
 
     @Transactional(readOnly = true)
-    public ArticleWithCommentsDto getArticle(Long articleId) {
+    public ArticleWithCommentsDto getArticleWithComments(Long articleId) {
         Article article = articleRepository.findByIdWithUserAccountAndArticleComments(articleId)
                 .orElseThrow(() -> new EntityNotFoundException("Article not found"));
 
@@ -39,8 +39,9 @@ public class ArticleService {
     }
 
     @Transactional
-    public Long create(CreateArticleDto dto) {
-        return articleRepository.save(dto.toEntity())
+    public Long create(String userId, CreateArticleDto dto) {
+        UserAccount userAccount = userAccountRepository.getReferenceById(userId);
+        return articleRepository.save(dto.toEntity(userAccount))
                 .getId();
     }
 
@@ -55,7 +56,12 @@ public class ArticleService {
     }
 
     @Transactional
-    public void delete(Long articleId) {
+    public void delete(Long articleId, String userId) {
+        Article article = articleRepository.getReferenceById(articleId);
+        UserAccount userAccount = userAccountRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("UserAccount not found"));
+
+        article.validateUserAccount(userAccount);
         articleRepository.deleteById(articleId);
     }
 
@@ -63,12 +69,20 @@ public class ArticleService {
         return articleRepository.count();
     }
 
+    //TODO : 해시테그 고도화 후 테스트 작성 필요함.
     public Page<ArticleDto> searchArticlesViaHashtag(String searchValue, Pageable pageable) {
         return articleRepository.findByHashtag(searchValue, pageable)
                 .map(ArticleDto::from);
     }
 
+    //TODO : 해시테그 고도화 후 테스트 작성 필요함.
     public List<String> getHashtags() {
         return articleRepository.findAllHashtagLimit100();
+    }
+
+    public ArticleDto getByIdWithUserAccount(Long articleId) {
+        return articleRepository.findByIdWithUserAccount(articleId)
+                .map(ArticleDto::from)
+                .orElseThrow(EntityNotFoundException::new);
     }
 }

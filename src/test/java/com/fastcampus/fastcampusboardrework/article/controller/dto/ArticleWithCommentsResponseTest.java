@@ -1,5 +1,6 @@
 package com.fastcampus.fastcampusboardrework.article.controller.dto;
 
+import com.fastcampus.fastcampusboardrework.article.controller.dto.response.ArticleWithCommentsResponse;
 import com.fastcampus.fastcampusboardrework.article.service.dto.ArticleCommentDto;
 import com.fastcampus.fastcampusboardrework.article.service.dto.ArticleCommentDtos;
 import com.fastcampus.fastcampusboardrework.article.service.dto.ArticleWithCommentsDto;
@@ -71,7 +72,6 @@ class ArticleWithCommentsResponseTest {
 
     private UserAccountDto getUserAccountDto() {
         return UserAccountDto.builder()
-                .id(1L)
                 .userId("foouserId")
                 .nickname("foonickname")
                 .build();

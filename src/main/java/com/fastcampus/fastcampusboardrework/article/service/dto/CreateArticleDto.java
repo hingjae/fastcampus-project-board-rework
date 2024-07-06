@@ -1,10 +1,10 @@
 package com.fastcampus.fastcampusboardrework.article.service.dto;
 
 import com.fastcampus.fastcampusboardrework.article.domain.Article;
+import com.fastcampus.fastcampusboardrework.useraccount.domain.UserAccount;
 import lombok.Builder;
 
 public record CreateArticleDto(
-        UserAccountDto userAccountDto,
         String title,
         String content,
         String hashtag
@@ -13,9 +13,9 @@ public record CreateArticleDto(
     public CreateArticleDto {
     }
 
-    public Article toEntity() {
+    public Article toEntity(UserAccount userAccount) {
         return Article.builder()
-                .userAccount(userAccountDto.toEntity())
+                .userAccount(userAccount)
                 .title(title)
                 .content(content)
                 .hashtag(hashtag)

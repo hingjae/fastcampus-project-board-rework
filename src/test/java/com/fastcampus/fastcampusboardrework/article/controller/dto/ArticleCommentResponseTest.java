@@ -1,5 +1,6 @@
 package com.fastcampus.fastcampusboardrework.article.controller.dto;
 
+import com.fastcampus.fastcampusboardrework.article.controller.dto.response.ArticleCommentResponse;
 import com.fastcampus.fastcampusboardrework.article.service.dto.ArticleCommentDto;
 import com.fastcampus.fastcampusboardrework.article.service.dto.UserAccountDto;
 import org.junit.jupiter.api.DisplayName;
@@ -38,7 +39,6 @@ class ArticleCommentResponseTest {
 
     private static UserAccountDto getUserAccountDto() {
         return UserAccountDto.builder()
-                .id(1L)
                 .userId("foo userId")
                 .nickname("foo nickname")
                 .build();

@@ -40,21 +40,21 @@ class ArticleServiceTest {
     @Test
     public void createArticle() {
         UserAccount userAccount = saveUser("user1", "aaa@bbb.com");
-        CreateArticleDto dto = getArticleCreateDto(userAccount);
+        CreateArticleDto dto = getArticleWithCommentsCreateDto();
 
-        articleService.create(dto);
+        articleService.create(userAccount.getUserId(), dto);
     }
 
     @Transactional
     @DisplayName("게시글을 아이디로 상세 조회한다.")
     @Test
-    public void getArticle() {
+    public void getArticleWithComments() {
         UserAccount savedUserAccount = saveUser("user1", "aaa@bbb.com");
         Article savedArticle = saveArticle(savedUserAccount);
         ArticleComment savedArticleComment = saveArticleComment(savedArticle, savedUserAccount);
         flushAndClear();
 
-        ArticleWithCommentsDto article = articleService.getArticle(savedArticle.getId());
+        ArticleWithCommentsDto article = articleService.getArticleWithComments(savedArticle.getId());
 
         assertThat(article.id()).isEqualTo(savedArticle.getId());
         assertThat(article.title()).isEqualTo(savedArticle.getTitle());
@@ -73,7 +73,7 @@ class ArticleServiceTest {
         Article savedArticle = saveArticle(savedUserAccount);
         flushAndClear();
 
-        ModifyArticleDto articleModify = getArticleModifyDto();
+        ModifyArticleDto articleModify = getArticleWithCommentsModifyDto();
         articleService.modify(savedArticle.getId(), savedUserAccount.getUserId(), articleModify);
         flushAndClear();
 
@@ -97,7 +97,7 @@ class ArticleServiceTest {
         Article savedArticle = saveArticle(savedUserAccount);
         flushAndClear();
 
-        articleService.delete(savedArticle.getId());
+        articleService.delete(savedArticle.getId(), "user1");
 
         Optional<Article> articleOptional = articleRepository.findById(savedArticle.getId());
         assertThat(articleOptional.isPresent()).isFalse();
@@ -106,7 +106,7 @@ class ArticleServiceTest {
     @Transactional
     @DisplayName("게시글을 페이지로 조회한다.")
     @Test
-    public void getArticlePage() {
+    public void getArticleWithCommentsPage() {
         initArticlePageTestData();
 
         Page<ArticleDto> articlePage = articleService.getArticlePage(null, null, PageRequest.of(0, 10));
@@ -131,7 +131,7 @@ class ArticleServiceTest {
     @Transactional
     @DisplayName("검색 조건으로 게시글을 페이지로 조회한다.")
     @Test
-    public void getArticlePageByParam() {
+    public void getArticleWithCommentsPageByParam() {
         initArticlePageTestData();
         Page<ArticleDto> articlePage = articleService.getArticlePage(SearchType.TITLE, "foo", PageRequest.of(0, 10));
 
@@ -152,7 +152,7 @@ class ArticleServiceTest {
     @Transactional
     @DisplayName("정렬 조건으로 게시글을 페이지로 조회한다.")
     @Test
-    public void getArticlePageByOrder() {
+    public void getArticleWithCommentsPageByOrder() {
         initArticlePageTestData();
         Page<ArticleDto> articlePage = articleService.getArticlePage(null, null, PageRequest.of(0, 10, Sort.by("content").descending()));
 
@@ -171,6 +171,21 @@ class ArticleServiceTest {
                         Tuple.tuple("foo title3", "foo content3"),
                         Tuple.tuple("foo title18", "foo content18")
                 );
+    }
+
+    @Transactional
+    @DisplayName("articleId로 게시글을 조회한다.")
+    @Test
+    public void getByArticleIdTest() {
+        Article article = saveArticle(saveUser("fooUserId", "fooEmail"));
+        flushAndClear();
+
+        ArticleDto result = articleService.getByIdWithUserAccount(article.getId());
+
+        assertThat(result.title()).isEqualTo(article.getTitle());
+        assertThat(result.content()).isEqualTo(article.getContent());
+        assertThat(result.userAccountDto().userId()).isEqualTo(article.getUserAccount().getUserId());
+        assertThat(result.userAccountDto().email()).isEqualTo(article.getUserAccount().getEmail());
     }
 
     private void initArticlePageTestData() {
@@ -204,11 +219,11 @@ class ArticleServiceTest {
     }
 
     private void saveArticleByParam(UserAccount user, String articleTitle, String articleContent) {
-        Article article = getArticleByParam(user, articleTitle, articleContent);
+        Article article = getArticleWithCommentsByParam(user, articleTitle, articleContent);
         articleRepository.save(article);
     }
 
-    private Article getArticleByParam(UserAccount user, String articleTitle, String articleContent) {
+    private Article getArticleWithCommentsByParam(UserAccount user, String articleTitle, String articleContent) {
         return Article.builder()
                 .userAccount(user)
                 .title(articleTitle)
@@ -216,13 +231,7 @@ class ArticleServiceTest {
                 .build();
     }
 
-    @DisplayName("검색키워드로 게시글을 페이지로 조회한다.")
-    @Test
-    public void getArticlePateBySearchParam() {
-
-    }
-
-    private ModifyArticleDto getArticleModifyDto() {
+    private ModifyArticleDto getArticleWithCommentsModifyDto() {
         return ModifyArticleDto.builder()
                 .title("new title")
                 .content("new content")
@@ -231,14 +240,14 @@ class ArticleServiceTest {
     }
 
     private ArticleComment saveArticleComment(Article savedArticle, UserAccount userAccount) {
-        return articleCommentRepository.save(getArticleComment(savedArticle, userAccount));
+        return articleCommentRepository.save(getArticleWithCommentsComment(savedArticle, userAccount));
     }
 
     private Article saveArticle(UserAccount userAccount) {
-        return articleRepository.save(getArticle(userAccount));
+        return articleRepository.save(getArticleWithComments(userAccount));
     }
 
-    private Article getArticle(UserAccount userAccount) {
+    private Article getArticleWithComments(UserAccount userAccount) {
         return Article.builder()
                 .userAccount(userAccount)
                 .title("article title")
@@ -247,7 +256,7 @@ class ArticleServiceTest {
                 .build();
     }
 
-    private ArticleComment getArticleComment(Article savedArticle, UserAccount userAccount) {
+    private ArticleComment getArticleWithCommentsComment(Article savedArticle, UserAccount userAccount) {
         return ArticleComment.builder()
                 .article(savedArticle)
                 .userAccount(userAccount)
@@ -255,9 +264,8 @@ class ArticleServiceTest {
                 .build();
     }
 
-    private CreateArticleDto getArticleCreateDto(UserAccount userAccount) {
+    private CreateArticleDto getArticleWithCommentsCreateDto() {
         return CreateArticleDto.builder()
-                .userAccountDto(UserAccountDto.from(userAccount))
                 .title("article title")
                 .content("article content")
                 .hashtag("hashtag")
