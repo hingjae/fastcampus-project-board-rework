@@ -74,7 +74,7 @@ class ArticleServiceTest {
         flushAndClear();
 
         ModifyArticleDto articleModify = getArticleModifyDto();
-        articleService.modify(savedArticle.getId(), savedUserAccount.getId(), articleModify);
+        articleService.modify(savedArticle.getId(), savedUserAccount.getUserId(), articleModify);
         flushAndClear();
 
         Article result = articleRepository.findById(savedArticle.getId())

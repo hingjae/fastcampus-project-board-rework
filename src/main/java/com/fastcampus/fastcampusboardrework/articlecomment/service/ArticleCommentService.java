@@ -28,15 +28,15 @@ public class ArticleCommentService {
     }
 
     @Transactional
-    public void create(Long articleId, Long userAccountId, CreateArticleCommentDto dto) {
+    public void create(Long articleId, String userId, CreateArticleCommentDto dto) {
         Article article = articleRepository.getReferenceById(articleId);
-        UserAccount userAccount = userAccountRepository.getReferenceById(userAccountId);
+        UserAccount userAccount = userAccountRepository.getReferenceById(userId);
 
         articleCommentRepository.save(dto.toEntity(article, userAccount));
     }
 
     @Transactional
-    public void modify(Long articleCommentId, Long userAccountId, ModifyArticleCommentDto dto) {
+    public void modify(Long articleCommentId, String userAccountId, ModifyArticleCommentDto dto) {
         ArticleComment articleComment = articleCommentRepository.getReferenceById(articleCommentId);
         UserAccount userAccount = userAccountRepository.findById(userAccountId)
                 .orElseThrow(EntityNotFoundException::new);

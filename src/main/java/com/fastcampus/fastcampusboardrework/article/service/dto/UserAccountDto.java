@@ -18,7 +18,6 @@ public record UserAccountDto(
 
     public UserAccount toEntity() {
         return UserAccount.builder()
-                .id(id)
                 .userId(userId)
                 .userPassword(userPassword)
                 .email(email)
@@ -29,7 +28,6 @@ public record UserAccountDto(
 
     public static UserAccountDto from(UserAccount userAccount) {
         return UserAccountDto.builder()
-                .id(userAccount.getId())
                 .userId(userAccount.getUserId())
                 .userPassword(userAccount.getUserPassword())
                 .email(userAccount.getEmail())

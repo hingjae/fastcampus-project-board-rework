@@ -44,7 +44,7 @@ class ArticleCommentServiceTest {
         flushAndClear();
         CreateArticleCommentDto createArticleCommentDto = getCreateArticleCommentDto();
 
-        articleCommentService.create(article.getId(), userAccount.getId(), createArticleCommentDto);
+        articleCommentService.create(article.getId(), userAccount.getUserId(), createArticleCommentDto);
 
         Set<ArticleComment> articleComments = articleCommentRepository.findByArticle_Id(article.getId());
         assertThat(articleComments).hasSize(1)
@@ -84,7 +84,7 @@ class ArticleCommentServiceTest {
         String newContent = "after modify";
         ModifyArticleCommentDto modifyArticleCommentDto = getModifyArticleCommentDto(newContent);
 
-        articleCommentService.modify(savedArticleComment.getId(), userAccount.getId(), modifyArticleCommentDto);
+        articleCommentService.modify(savedArticleComment.getId(), userAccount.getUserId(), modifyArticleCommentDto);
         flushAndClear();
 
         ArticleComment result = articleCommentRepository.findById(savedArticleComment.getId())

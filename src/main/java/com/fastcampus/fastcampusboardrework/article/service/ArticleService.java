@@ -45,9 +45,9 @@ public class ArticleService {
     }
 
     @Transactional
-    public void modify(Long articleId, Long userAccountId, ModifyArticleDto dto) {
+    public void modify(Long articleId, String userId, ModifyArticleDto dto) {
         Article article = articleRepository.getReferenceById(articleId);
-        UserAccount userAccount = userAccountRepository.findById(userAccountId)
+        UserAccount userAccount = userAccountRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("UserAccount not found"));
 
         article.validateUserAccount(userAccount);
