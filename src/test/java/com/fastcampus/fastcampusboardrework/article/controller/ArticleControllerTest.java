@@ -1,8 +1,7 @@
 package com.fastcampus.fastcampusboardrework.article.controller;
 
-import com.fastcampus.fastcampusboardrework.article.controller.dto.ArticleResponse;
-import com.fastcampus.fastcampusboardrework.article.controller.dto.ArticleWithCommentsResponse;
 import com.fastcampus.fastcampusboardrework.article.service.ArticleService;
+import com.fastcampus.fastcampusboardrework.article.service.PaginationService;
 import com.fastcampus.fastcampusboardrework.article.service.dto.ArticleCommentDtos;
 import com.fastcampus.fastcampusboardrework.article.service.dto.ArticleDto;
 import com.fastcampus.fastcampusboardrework.article.service.dto.ArticleWithCommentsDto;
@@ -10,7 +9,6 @@ import com.fastcampus.fastcampusboardrework.article.service.dto.UserAccountDto;
 import com.fastcampus.fastcampusboardrework.common.config.SecurityConfig;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -37,6 +35,7 @@ class ArticleControllerTest {
 
     @Autowired private MockMvc mvc;
     @MockBean private ArticleService articleService;
+    @MockBean private PaginationService paginationService;
 
     @DisplayName("게시글 리스트 페이지 호출")
     @Test
@@ -45,15 +44,20 @@ class ArticleControllerTest {
 
         given(articleService.getArticlePage(any(), anyString(), any(Pageable.class)))
                 .willReturn(articles);
+        given(paginationService.getPaginationBarNumbers(0, 10))
+                .willReturn(List.of(0, 1, 2, 3, 4));
 
         mvc.perform(get("/articles")
                         .param("searchType", "TITLE")
-                        .param("searchKeyword", "Title")
+                        .param("searchValue", "Title")
                         .param("page", "0")
-                        .param("size", "10"))
+                        .param("size", "10")
+                        .param("sort", "title" + "+" + "asc")
+                )
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
                 .andExpect(model().attributeExists("articles"))
+                .andExpect(model().attributeExists("paginationBarNumbers"))
                 .andExpect(view().name("articles/index"))
                 .andDo(print());
     }
@@ -69,6 +73,8 @@ class ArticleControllerTest {
 
         given(articleService.getArticle(1L))
                 .willReturn(article);
+        given(articleService.getArticleCount())
+                .willReturn(10L);
 
         mvc.perform(get("/articles/1"))
                 .andExpect(status().isOk())

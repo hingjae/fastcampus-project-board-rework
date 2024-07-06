@@ -1,6 +1,7 @@
 package com.fastcampus.fastcampusboardrework.articlecomment.domain;
 
 import com.fastcampus.fastcampusboardrework.article.domain.Article;
+import com.fastcampus.fastcampusboardrework.article.domain.exception.UserNotAuthorizedException;
 import com.fastcampus.fastcampusboardrework.common.config.BaseEntity;
 import com.fastcampus.fastcampusboardrework.useraccount.domain.UserAccount;
 import jakarta.persistence.*;
@@ -48,5 +49,19 @@ public class ArticleComment extends BaseEntity {
     @Override
     public int hashCode() {
         return Objects.hashCode(getId());
+    }
+
+    public void validateUserAccount(UserAccount userAccount) {
+        if (!this.belongsTo(userAccount)) {
+            throw new UserNotAuthorizedException();
+        }
+    }
+
+    private boolean belongsTo(UserAccount userAccount) {
+        return this.userAccount.equals(userAccount);
+    }
+
+    public void modify(String content) {
+        this.content = content;
     }
 }

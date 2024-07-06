@@ -1,14 +1,13 @@
 package com.fastcampus.fastcampusboardrework.article.service.dto;
 
-import com.fastcampus.fastcampusboardrework.article.domain.Article;
 import lombok.Builder;
 
-public record ArticleModifyDto(
+public record ModifyArticleDto(
         String title,
         String content,
         String hashtag
 ) {
     @Builder
-    public ArticleModifyDto {
+    public ModifyArticleDto {
     }
 }

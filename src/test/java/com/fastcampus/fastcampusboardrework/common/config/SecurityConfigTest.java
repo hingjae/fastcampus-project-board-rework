@@ -17,8 +17,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ActiveProfiles("test")
-//@Import(SecurityConfig.class)
-//@WebMvcTest
 @AutoConfigureMockMvc
 @SpringBootTest
 class SecurityConfigTest {

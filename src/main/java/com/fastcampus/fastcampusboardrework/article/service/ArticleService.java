@@ -3,10 +3,12 @@ package com.fastcampus.fastcampusboardrework.article.service;
 import com.fastcampus.fastcampusboardrework.article.controller.SearchType;
 import com.fastcampus.fastcampusboardrework.article.domain.Article;
 import com.fastcampus.fastcampusboardrework.article.repository.ArticleRepository;
-import com.fastcampus.fastcampusboardrework.article.service.dto.ArticleCreateDto;
+import com.fastcampus.fastcampusboardrework.article.service.dto.CreateArticleDto;
 import com.fastcampus.fastcampusboardrework.article.service.dto.ArticleDto;
-import com.fastcampus.fastcampusboardrework.article.service.dto.ArticleModifyDto;
+import com.fastcampus.fastcampusboardrework.article.service.dto.ModifyArticleDto;
 import com.fastcampus.fastcampusboardrework.article.service.dto.ArticleWithCommentsDto;
+import com.fastcampus.fastcampusboardrework.useraccount.domain.UserAccount;
+import com.fastcampus.fastcampusboardrework.useraccount.repository.UserAccountRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -18,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ArticleService {
     private final ArticleRepository articleRepository;
+    private final UserAccountRepository userAccountRepository;
 
     @Transactional(readOnly = true)
     public Page<ArticleDto> getArticlePage(SearchType searchType, String searchKeyword, Pageable pageable) {
@@ -28,27 +31,33 @@ public class ArticleService {
     @Transactional(readOnly = true)
     public ArticleWithCommentsDto getArticle(Long articleId) {
         Article article = articleRepository.findByIdWithUserAccountAndArticleComments(articleId)
-                .orElseThrow(EntityNotFoundException::new);
+                .orElseThrow(() -> new EntityNotFoundException("Article not found"));
 
         return ArticleWithCommentsDto.from(article);
     }
 
     @Transactional
-    public Long create(ArticleCreateDto dto) {
+    public Long create(CreateArticleDto dto) {
         return articleRepository.save(dto.toEntity())
                 .getId();
     }
 
     @Transactional
-    public void modify(Long articleId, ArticleModifyDto dto) {
-        Article article = articleRepository.findById(articleId)
-                .orElseThrow(EntityNotFoundException::new);
+    public void modify(Long articleId, Long userAccountId, ModifyArticleDto dto) {
+        Article article = articleRepository.getReferenceById(articleId);
+        UserAccount userAccount = userAccountRepository.findById(userAccountId)
+                .orElseThrow(() -> new EntityNotFoundException("UserAccount not found"));
 
+        article.validateUserAccount(userAccount);
         article.modify(dto.title(), dto.content(), dto.hashtag());
     }
 
     @Transactional
     public void delete(Long articleId) {
         articleRepository.deleteById(articleId);
+    }
+
+    public long getArticleCount() {
+        return articleRepository.count();
     }
 }

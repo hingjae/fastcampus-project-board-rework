@@ -40,7 +40,7 @@ class ArticleServiceTest {
     @Test
     public void createArticle() {
         UserAccount userAccount = saveUser("user1", "aaa@bbb.com");
-        ArticleCreateDto dto = getArticleCreateDto(userAccount);
+        CreateArticleDto dto = getArticleCreateDto(userAccount);
 
         articleService.create(dto);
     }
@@ -73,8 +73,8 @@ class ArticleServiceTest {
         Article savedArticle = saveArticle(savedUserAccount);
         flushAndClear();
 
-        ArticleModifyDto articleModify = getArticleModifyDto();
-        articleService.modify(savedArticle.getId(), articleModify);
+        ModifyArticleDto articleModify = getArticleModifyDto();
+        articleService.modify(savedArticle.getId(), savedUserAccount.getId(), articleModify);
         flushAndClear();
 
         Article result = articleRepository.findById(savedArticle.getId())
@@ -222,8 +222,8 @@ class ArticleServiceTest {
 
     }
 
-    private ArticleModifyDto getArticleModifyDto() {
-        return ArticleModifyDto.builder()
+    private ModifyArticleDto getArticleModifyDto() {
+        return ModifyArticleDto.builder()
                 .title("new title")
                 .content("new content")
                 .hashtag("new hashtag")
@@ -255,8 +255,8 @@ class ArticleServiceTest {
                 .build();
     }
 
-    private ArticleCreateDto getArticleCreateDto(UserAccount userAccount) {
-        return ArticleCreateDto.builder()
+    private CreateArticleDto getArticleCreateDto(UserAccount userAccount) {
+        return CreateArticleDto.builder()
                 .userAccountDto(UserAccountDto.from(userAccount))
                 .title("article title")
                 .content("article content")
