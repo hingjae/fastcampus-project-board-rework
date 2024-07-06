@@ -17,7 +17,6 @@ import org.springframework.data.domain.Sort;
 import java.util.List;
 
 import static com.fastcampus.fastcampusboardrework.article.domain.QArticle.article;
-import static com.fastcampus.fastcampusboardrework.articlecomment.domain.QArticleComment.articleComment;
 import static com.fastcampus.fastcampusboardrework.useraccount.domain.QUserAccount.userAccount;
 
 @RequiredArgsConstructor
@@ -31,7 +30,6 @@ public class ArticleRepositoryImpl implements ArticleRepositoryCustom {
 
         List<Article> content = query
                 .selectFrom(article)
-                .leftJoin(article.articleComments, articleComment).fetchJoin()
                 .leftJoin(article.userAccount, userAccount).fetchJoin()
                 .where(keywordContains)
                 .offset(pageable.getOffset())
@@ -57,7 +55,7 @@ public class ArticleRepositoryImpl implements ArticleRepositoryCustom {
             case TITLE -> article.title.containsIgnoreCase(searchKeyword);
             case CONTENT -> article.content.containsIgnoreCase(searchKeyword);
             case ID -> article.userAccount.userId.eq(searchKeyword);
-            case NICKNAME -> article.userAccount.nickname.eq(searchKeyword);
+            case NICKNAME -> article.userAccount.nickname.eq(searchKeyword); // TODO left join 페치조인에는 별칭을 걸면 안되는데,,
             case HASHTAG -> article.hashtag.eq(searchKeyword);
         };
     }

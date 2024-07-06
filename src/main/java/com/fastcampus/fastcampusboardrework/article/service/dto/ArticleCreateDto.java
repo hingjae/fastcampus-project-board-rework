@@ -10,11 +10,7 @@ public record ArticleCreateDto(
         String hashtag
 ) {
     @Builder
-    public ArticleCreateDto(UserAccountDto userAccountDto, String title, String content, String hashtag) {
-        this.userAccountDto = userAccountDto;
-        this.title = title;
-        this.content = content;
-        this.hashtag = hashtag;
+    public ArticleCreateDto {
     }
 
     public Article toEntity() {

@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,8 +52,7 @@ class ArticleServiceTest {
         UserAccount savedUserAccount = saveUser("user1", "aaa@bbb.com");
         Article savedArticle = saveArticle(savedUserAccount);
         ArticleComment savedArticleComment = saveArticleComment(savedArticle, savedUserAccount);
-        em.flush();
-        em.clear(); // 연관관계 편의 메서드를 만들지 않았기 때문에 clear해줘야함.
+        flushAndClear();
 
         ArticleWithCommentsDto article = articleService.getArticle(savedArticle.getId());
 
@@ -71,11 +71,11 @@ class ArticleServiceTest {
     public void modifyArticle() {
         UserAccount savedUserAccount = saveUser("user1", "aaa@bbb.com");
         Article savedArticle = saveArticle(savedUserAccount);
-        em.flush();
-        em.clear();
+        flushAndClear();
 
         ArticleModifyDto articleModify = getArticleModifyDto();
         articleService.modify(savedArticle.getId(), articleModify);
+        flushAndClear();
 
         Article result = articleRepository.findById(savedArticle.getId())
                 .orElseThrow(RuntimeException::new);
@@ -84,14 +84,18 @@ class ArticleServiceTest {
         assertThat(result.getHashtag()).isEqualTo(articleModify.hashtag());
     }
 
+    private void flushAndClear() {
+        em.flush();
+        em.clear();
+    }
+
     @Transactional
     @DisplayName("게시글을 삭제 한다.")
     @Test
     public void deleteArticle() {
         UserAccount savedUserAccount = saveUser("user1", "aaa@bbb.com");
         Article savedArticle = saveArticle(savedUserAccount);
-        em.flush();
-        em.clear();
+        flushAndClear();
 
         articleService.delete(savedArticle.getId());
 
@@ -145,6 +149,30 @@ class ArticleServiceTest {
                 );
     }
 
+    @Transactional
+    @DisplayName("정렬 조건으로 게시글을 페이지로 조회한다.")
+    @Test
+    public void getArticlePageByOrder() {
+        initArticlePageTestData();
+        Page<ArticleDto> articlePage = articleService.getArticlePage(null, null, PageRequest.of(0, 10, Sort.by("content").descending()));
+
+        assertThat(articlePage.getTotalElements()).isEqualTo(20);
+        assertThat(articlePage.getContent()).hasSize(10)
+                .extracting(ArticleDto::title, ArticleDto::content)
+                .containsExactly(
+                        Tuple.tuple("hello title8", "hello content8"),
+                        Tuple.tuple("hello title5", "hello content5"),
+                        Tuple.tuple("hello title2", "hello content2"),
+                        Tuple.tuple("hello title17", "hello content17"),
+                        Tuple.tuple("hello title14", "hello content14"),
+                        Tuple.tuple("hello title11", "hello content11"),
+                        Tuple.tuple("foo title9", "foo content9"),
+                        Tuple.tuple("foo title6", "foo content6"),
+                        Tuple.tuple("foo title3", "foo content3"),
+                        Tuple.tuple("foo title18", "foo content18")
+                );
+    }
+
     private void initArticlePageTestData() {
         UserAccount user1 = saveUser("user1", "aaa@bbb.com");
         UserAccount user2 = saveUser("user2", "bbb@ccc.com");
@@ -172,8 +200,7 @@ class ArticleServiceTest {
             saveArticleByParam(targetUserAccount, articleTitle, articleContent);
         }
 
-        em.flush();
-        em.clear();
+        flushAndClear();
     }
 
     private void saveArticleByParam(UserAccount user, String articleTitle, String articleContent) {

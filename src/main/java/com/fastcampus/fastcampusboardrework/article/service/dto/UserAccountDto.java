@@ -13,13 +13,7 @@ public record UserAccountDto(
 ) {
 
     @Builder
-    public UserAccountDto(Long id, String userId, String userPassword, String email, String nickname, String memo) {
-        this.id = id;
-        this.userId = userId;
-        this.userPassword = userPassword;
-        this.email = email;
-        this.nickname = nickname;
-        this.memo = memo;
+    public UserAccountDto {
     }
 
     public UserAccount toEntity() {
