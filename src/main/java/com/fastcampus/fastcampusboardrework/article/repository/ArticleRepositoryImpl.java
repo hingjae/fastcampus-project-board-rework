@@ -68,4 +68,44 @@ public class ArticleRepositoryImpl implements ArticleRepositoryCustom {
                 ))
                 .toArray(OrderSpecifier[]::new);
     }
+
+    @Override
+    public Page<Article> findByHashtag(String hashtag, Pageable pageable) {
+        List<Article> content = query
+                .selectFrom(article)
+                .leftJoin(article.userAccount, userAccount).fetchJoin()
+                .where(hashtagContains(hashtag))
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .orderBy(createOrderSpecifiers(pageable.getSort()))
+                .fetch();
+
+        Long total = query
+                .select(article.count())
+                .from(article)
+                .leftJoin(article.userAccount, userAccount)
+                .where(hashtagContains(hashtag))
+                .fetchOne();
+
+        return new PageImpl<>(content, pageable, total);
+    }
+
+    private BooleanExpression hashtagContains(String hashtag) {
+        if (hashtag == null || hashtag.isEmpty()) {
+            return null;
+        }
+        return article.hashtag.eq(hashtag);
+    }
+
+    @Override
+    public List<String> findAllHashtagLimit100() {
+        return query
+                .selectDistinct(article.hashtag)
+                .from(article)
+                .limit(100)
+                .where(article.hashtag.isNotNull())
+                .groupBy(article.hashtag)
+                .orderBy(article.hashtag.count().desc())
+                .fetch();
+    }
 }

@@ -16,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 @Service
 public class ArticleService {
@@ -59,5 +61,14 @@ public class ArticleService {
 
     public long getArticleCount() {
         return articleRepository.count();
+    }
+
+    public Page<ArticleDto> searchArticlesViaHashtag(String searchValue, Pageable pageable) {
+        return articleRepository.findByHashtag(searchValue, pageable)
+                .map(ArticleDto::from);
+    }
+
+    public List<String> getHashtags() {
+        return articleRepository.findAllHashtagLimit100();
     }
 }
