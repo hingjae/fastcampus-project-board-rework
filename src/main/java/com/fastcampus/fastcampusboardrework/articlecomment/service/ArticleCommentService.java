@@ -2,6 +2,7 @@ package com.fastcampus.fastcampusboardrework.articlecomment.service;
 
 import com.fastcampus.fastcampusboardrework.article.domain.Article;
 import com.fastcampus.fastcampusboardrework.article.repository.ArticleRepository;
+import com.fastcampus.fastcampusboardrework.article.service.dto.ArticleCommentDto;
 import com.fastcampus.fastcampusboardrework.article.service.dto.ArticleCommentDtos;
 import com.fastcampus.fastcampusboardrework.articlecomment.domain.ArticleComment;
 import com.fastcampus.fastcampusboardrework.articlecomment.repository.ArticleCommentRepository;
@@ -28,9 +29,11 @@ public class ArticleCommentService {
     }
 
     @Transactional
-    public void create(Long articleId, String userId, CreateArticleCommentDto dto) {
-        Article article = articleRepository.getReferenceById(articleId);
-        UserAccount userAccount = userAccountRepository.getReferenceById(userId);
+    public void create(String userId, CreateArticleCommentDto dto) {
+        Article article = articleRepository.findById(dto.articleId())
+                .orElseThrow(EntityNotFoundException::new);
+        UserAccount userAccount = userAccountRepository.findById(userId)
+                .orElseThrow(EntityNotFoundException::new);
 
         articleCommentRepository.save(dto.toEntity(article, userAccount));
     }
@@ -46,7 +49,13 @@ public class ArticleCommentService {
     }
 
     @Transactional
-    public void delete(Long articleCommentId) {
+    public void delete(Long articleCommentId, String userId) {
+        ArticleComment articleComment = articleCommentRepository.findById(articleCommentId)
+                .orElseThrow(EntityNotFoundException::new);
+        UserAccount userAccount = userAccountRepository.findById(userId)
+                .orElseThrow(EntityNotFoundException::new);
+
+        articleComment.validateUserAccount(userAccount);
         articleCommentRepository.deleteById(articleCommentId);
     }
 

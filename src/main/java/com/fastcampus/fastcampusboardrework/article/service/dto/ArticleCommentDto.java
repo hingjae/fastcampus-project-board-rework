@@ -1,6 +1,8 @@
 package com.fastcampus.fastcampusboardrework.article.service.dto;
 
+import com.fastcampus.fastcampusboardrework.article.domain.Article;
 import com.fastcampus.fastcampusboardrework.articlecomment.domain.ArticleComment;
+import com.fastcampus.fastcampusboardrework.useraccount.domain.UserAccount;
 import lombok.Builder;
 
 import java.time.LocalDateTime;

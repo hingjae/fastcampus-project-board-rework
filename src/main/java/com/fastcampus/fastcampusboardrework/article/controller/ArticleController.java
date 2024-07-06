@@ -70,14 +70,14 @@ public class ArticleController {
         return "articles/search-hashtag";
     }
 
-    @GetMapping("/create")
+    @GetMapping("/form")
     public String createArticleForm(Model model) {
         model.addAttribute("formStatus", FormStatus.CREATE);
 
         return "articles/form";
     }
 
-    @PostMapping ("/create")
+    @PostMapping ("/form")
     public String create(SaveArticleRequest request) {
         // TODO: 인증 정보를 넣어줘야 한다.
         articleService.create("userId", request.toCreateDto());
@@ -85,7 +85,7 @@ public class ArticleController {
         return "redirect:/articles";
     }
 
-    @GetMapping("/{articleId}/modify")
+    @GetMapping("/{articleId}/form")
     public String modifyArticleForm(@PathVariable Long articleId, Model model) {
         ArticleResponse article = ArticleResponse.from(articleService.getByIdWithUserAccount(articleId));
 
@@ -95,7 +95,7 @@ public class ArticleController {
         return "articles/form";
     }
 
-    @PostMapping ("/{articleId}/modify")
+    @PostMapping ("/{articleId}/form")
     public String modify(@PathVariable Long articleId, SaveArticleRequest request) {
         // TODO: 인증 정보를 넣어줘야 한다.
         articleService.modify(articleId, "userId", request.toModifyDto());

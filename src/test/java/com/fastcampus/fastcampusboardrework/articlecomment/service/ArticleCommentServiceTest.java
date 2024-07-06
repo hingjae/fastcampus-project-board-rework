@@ -39,12 +39,12 @@ class ArticleCommentServiceTest {
     @DisplayName("댓글을 생성한다.")
     @Test
     public void createArticleCommentTest() {
-        UserAccount userAccount = userAccountRepository.save(getUserAccount());
+        UserAccount userAccount = userAccountRepository.save(getUserAccount("userId"));
         Article article = articleRepository.save(getArticle(userAccount));
         flushAndClear();
-        CreateArticleCommentDto createArticleCommentDto = getCreateArticleCommentDto();
+        CreateArticleCommentDto createArticleCommentDto = getCreateArticleCommentDto(article.getId());
 
-        articleCommentService.create(article.getId(), userAccount.getUserId(), createArticleCommentDto);
+        articleCommentService.create(userAccount.getUserId(), createArticleCommentDto);
 
         Set<ArticleComment> articleComments = articleCommentRepository.findByArticle_Id(article.getId());
         assertThat(articleComments).hasSize(1)
@@ -52,8 +52,9 @@ class ArticleCommentServiceTest {
                 .containsExactly("foo content");
     }
 
-    private static CreateArticleCommentDto getCreateArticleCommentDto() {
+    private static CreateArticleCommentDto getCreateArticleCommentDto(Long articleId) {
         return CreateArticleCommentDto.builder()
+                .articleId(articleId)
                 .content("foo content")
                 .build();
     }
@@ -69,8 +70,8 @@ class ArticleCommentServiceTest {
         assertThat(items).hasSize(2)
                 .extracting(ArticleCommentDto::content, item -> item.userAccountDto().userId(), item -> item.userAccountDto().nickname())
                 .containsExactlyInAnyOrder(
-                        Tuple.tuple("foo content", "fooUserId", "fooNickname"),
-                        Tuple.tuple("bar content", "fooUserId", "fooNickname")
+                        Tuple.tuple("foo content", "userId", "fooNickname"),
+                        Tuple.tuple("bar content", "userId", "fooNickname")
                 );
     }
 
@@ -78,7 +79,7 @@ class ArticleCommentServiceTest {
     @DisplayName("댓글을 수정한다.")
     @Test
     public void modifyArticleCommentTest() {
-        UserAccount userAccount = userAccountRepository.save(getUserAccount());
+        UserAccount userAccount = userAccountRepository.save(getUserAccount("userId"));
         Article article = articleRepository.save(getArticle(userAccount));
         ArticleComment savedArticleComment = articleCommentRepository.save(getArticleComment(userAccount, article, "before modify"));
         String newContent = "after modify";
@@ -97,11 +98,12 @@ class ArticleCommentServiceTest {
     @DisplayName("댓글을 삭제한다.")
     @Test
     public void deleteArticleCommentTest() {
-        UserAccount userAccount = userAccountRepository.save(getUserAccount());
+        String userId = "userId";
+        UserAccount userAccount = userAccountRepository.save(getUserAccount(userId));
         Article article = articleRepository.save(getArticle(userAccount));
         ArticleComment savedArticleComment = articleCommentRepository.save(getArticleComment(userAccount, article, "foo"));
 
-        articleCommentService.delete(savedArticleComment.getId());
+        articleCommentService.delete(savedArticleComment.getId(), userId);
         flushAndClear();
 
         Optional<ArticleComment> articleCommentOptional = articleCommentRepository.findById(savedArticleComment.getId());
@@ -121,7 +123,7 @@ class ArticleCommentServiceTest {
     }
 
     private Long initData() {
-        UserAccount userAccount = userAccountRepository.save(getUserAccount());
+        UserAccount userAccount = userAccountRepository.save(getUserAccount("userId"));
         Article article = articleRepository.save(getArticle(userAccount));
         ArticleComment articleComment1 = getArticleComment(userAccount, article, "foo content");
         ArticleComment articleComment2 = getArticleComment(userAccount, article, "bar content");
@@ -149,9 +151,9 @@ class ArticleCommentServiceTest {
                 .build();
     }
 
-    private UserAccount getUserAccount() {
+    private UserAccount getUserAccount(String userId) {
         return UserAccount.builder()
-                .userId("fooUserId")
+                .userId(userId)
                 .userPassword("fooPassword")
                 .nickname("fooNickname")
                 .email("fooEmail")

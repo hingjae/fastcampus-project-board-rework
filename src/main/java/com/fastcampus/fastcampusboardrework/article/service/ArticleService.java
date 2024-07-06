@@ -40,7 +40,8 @@ public class ArticleService {
 
     @Transactional
     public Long create(String userId, CreateArticleDto dto) {
-        UserAccount userAccount = userAccountRepository.getReferenceById(userId);
+        UserAccount userAccount = userAccountRepository.findById(userId)
+                .orElseThrow(EntityNotFoundException::new);
         return articleRepository.save(dto.toEntity(userAccount))
                 .getId();
     }

@@ -142,7 +142,7 @@ class ArticleControllerTest {
     @DisplayName("게시글 생성 페이지를 반환한다.")
     @Test
     public void getCreateArticleFormPage() throws Exception {
-        mvc.perform(get("/articles/create"))
+        mvc.perform(get("/articles/form"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
                 .andExpect(model().attributeExists("formStatus"))
@@ -157,7 +157,7 @@ class ArticleControllerTest {
         given(articleService.create("userId", request.toCreateDto()))
                 .willReturn(1L);
 
-        mvc.perform(post("/articles/create")
+        mvc.perform(post("/articles/form")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .content(formDataEncoder.encode(request))
                 .with(csrf()))
@@ -173,7 +173,7 @@ class ArticleControllerTest {
         given(articleService.getByIdWithUserAccount(1L))
                 .willReturn(getArticleDto());
 
-        mvc.perform(get("/articles/{articleId}/modify", 1L))
+        mvc.perform(get("/articles/{articleId}/form", 1L))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML))
                 .andExpect(model().attributeExists("article"))
@@ -189,7 +189,7 @@ class ArticleControllerTest {
         Long articleId = 1L;
         willDoNothing().given(articleService).modify(articleId, "userId", request.toModifyDto());
 
-        mvc.perform(post("/articles/{articleId}/modify", articleId)
+        mvc.perform(post("/articles/{articleId}/form", articleId)
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .content(formDataEncoder.encode(request))
                 .with(csrf()))

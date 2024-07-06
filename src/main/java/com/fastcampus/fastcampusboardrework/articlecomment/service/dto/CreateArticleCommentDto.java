@@ -6,6 +6,7 @@ import com.fastcampus.fastcampusboardrework.useraccount.domain.UserAccount;
 import lombok.Builder;
 
 public record CreateArticleCommentDto(
+        Long articleId,
         String content
 ) {
     @Builder
