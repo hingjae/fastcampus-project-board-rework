@@ -2,6 +2,7 @@ package com.fastcampus.fastcampusboardrework.article.service;
 
 import com.fastcampus.fastcampusboardrework.article.controller.SearchType;
 import com.fastcampus.fastcampusboardrework.article.domain.Article;
+import com.fastcampus.fastcampusboardrework.article.domain.exception.UserNotAuthorizedException;
 import com.fastcampus.fastcampusboardrework.article.repository.ArticleRepository;
 import com.fastcampus.fastcampusboardrework.article.service.dto.*;
 import com.fastcampus.fastcampusboardrework.articlecomment.domain.ArticleComment;
@@ -23,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.groups.Tuple.tuple;
 
 @ActiveProfiles("test")
@@ -82,6 +84,20 @@ class ArticleServiceTest {
         assertThat(result.getTitle()).isEqualTo(articleModify.title());
         assertThat(result.getContent()).isEqualTo(articleModify.content());
         assertThat(result.getHashtag()).isEqualTo(articleModify.hashtag());
+    }
+
+    @Transactional
+    @DisplayName("게시글의 유저가 다르면 게시글 수정을 할 수 없다.")
+    @Test
+    public void modifyArticleFail() {
+        UserAccount savedUserAccount1 = saveUser("user1", "aaa@bbb.com");
+        UserAccount savedUserAccount2 = saveUser("user2", "bbb@ccc.com");
+        Article savedArticle = saveArticle(savedUserAccount1);
+        flushAndClear();
+
+        ModifyArticleDto articleModify = getArticleWithCommentsModifyDto();
+        assertThatThrownBy(() -> articleService.modify(savedArticle.getId(), savedUserAccount2.getUserId(), articleModify))
+                .isInstanceOf(UserNotAuthorizedException.class);
     }
 
     private void flushAndClear() {

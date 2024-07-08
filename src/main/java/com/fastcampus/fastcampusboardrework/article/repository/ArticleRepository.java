@@ -20,4 +20,6 @@ public interface ArticleRepository extends JpaRepository<Article, Long>, Article
             " join fetch a.userAccount" +
             " where a.id = :id")
     Optional<Article> findByIdWithUserAccount(@Param("id") Long id);
+
+    void deleteByIdAndUserAccount_UserId(Long id, String userId);
 }

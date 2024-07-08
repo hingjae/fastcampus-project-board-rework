@@ -2,7 +2,9 @@ package com.fastcampus.fastcampusboardrework.articlecomment.controller;
 
 import com.fastcampus.fastcampusboardrework.articlecomment.controller.dto.request.ArticleCommentRequest;
 import com.fastcampus.fastcampusboardrework.articlecomment.service.ArticleCommentService;
+import com.fastcampus.fastcampusboardrework.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,17 +18,15 @@ public class ArticleCommentController {
     private final ArticleCommentService articleCommentService;
 
     @PostMapping("/new")
-    public String postNewArticleComment(ArticleCommentRequest articleCommentRequest) {
-        // TODO: 인증 정보를 넣어줘야 한다.
-        articleCommentService.create("userId", articleCommentRequest.toDto());
+    public String postNewArticleComment(ArticleCommentRequest articleCommentRequest, @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        articleCommentService.create(customUserDetails.username(), articleCommentRequest.toDto());
 
         return "redirect:/articles/" + articleCommentRequest.articleId();
     }
 
     @PostMapping ("/{commentId}/delete")
-    public String deleteArticleComment(@PathVariable Long commentId, Long articleId) {
-        // TODO: 인증 정보를 넣어줘야 한다.
-        articleCommentService.delete(commentId, "userId");
+    public String deleteArticleComment(@PathVariable Long commentId, Long articleId, @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        articleCommentService.delete(commentId, customUserDetails.username());
 
         return "redirect:/articles/" + articleId;
     }

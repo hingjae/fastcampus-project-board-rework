@@ -63,7 +63,7 @@ public class ArticleService {
                 .orElseThrow(() -> new EntityNotFoundException("UserAccount not found"));
 
         article.validateUserAccount(userAccount);
-        articleRepository.deleteById(articleId);
+        articleRepository.deleteByIdAndUserAccount_UserId(articleId, userAccount.getUserId());
     }
 
     public long getArticleCount() {

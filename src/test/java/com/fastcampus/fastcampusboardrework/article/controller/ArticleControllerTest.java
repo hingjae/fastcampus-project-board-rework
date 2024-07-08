@@ -7,16 +7,22 @@ import com.fastcampus.fastcampusboardrework.article.service.dto.ArticleCommentDt
 import com.fastcampus.fastcampusboardrework.article.service.dto.ArticleDto;
 import com.fastcampus.fastcampusboardrework.article.service.dto.ArticleWithCommentsDto;
 import com.fastcampus.fastcampusboardrework.article.service.dto.UserAccountDto;
-import com.fastcampus.fastcampusboardrework.common.config.SecurityConfig;
+import com.fastcampus.fastcampusboardrework.common.config.TestSecurityConfig;
+import com.fastcampus.fastcampusboardrework.security.CustomUserDetails;
 import com.fastcampus.fastcampusboardrework.util.FormDataEncoder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.*;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.TestExecutionEvent;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithUserDetails;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -27,13 +33,17 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@Import({SecurityConfig.class, FormDataEncoder.class})
-@WebMvcTest(ArticleController.class)
+//@WebMvcTest(ArticleController.class)
+@ActiveProfiles("test")
+@AutoConfigureMockMvc
+@SpringBootTest
+@Import({FormDataEncoder.class, TestSecurityConfig.class})
 class ArticleControllerTest {
 
     @Autowired private MockMvc mvc;
@@ -66,6 +76,7 @@ class ArticleControllerTest {
                 .andDo(print());
     }
 
+    @WithMockUser
     @DisplayName("게시글 상세조회 페이지를 반환한다.")
     @Test
     public void getArticleDetail() throws Exception {
@@ -139,6 +150,7 @@ class ArticleControllerTest {
                 .andDo(print());
     }
 
+    @WithMockUser
     @DisplayName("게시글 생성 페이지를 반환한다.")
     @Test
     public void getCreateArticleFormPage() throws Exception {
@@ -150,6 +162,7 @@ class ArticleControllerTest {
                 .andDo(print());
     }
 
+    @WithUserDetails(value = "userId", setupBefore = TestExecutionEvent.TEST_EXECUTION)
     @DisplayName("게시글을 생성한다.")
     @Test
     public void createArticle() throws Exception {
@@ -167,6 +180,7 @@ class ArticleControllerTest {
                 .andDo(print());
     }
 
+    @WithMockUser
     @DisplayName("게시글 수정 페이지를 반환한다.")
     @Test
     public void getModifyArticleFormPage() throws Exception {
@@ -192,13 +206,18 @@ class ArticleControllerTest {
         mvc.perform(post("/articles/{articleId}/form", articleId)
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .content(formDataEncoder.encode(request))
-                .with(csrf()))
+                .with(csrf())
+                .with(user(CustomUserDetails.builder()
+                        .username("userId")
+                        .build()))
+                )
                 .andExpect(status().is3xxRedirection())
                 .andExpect(view().name("redirect:/articles/" + articleId))
                 .andExpect(redirectedUrl("/articles/" + articleId))
                 .andDo(print());
     }
 
+    @WithUserDetails(value = "userId",userDetailsServiceBeanName = "userDetailsService", setupBefore = TestExecutionEvent.TEST_EXECUTION)
     @DisplayName("게시글을 삭제한다.")
     @Test
     public void deleteArticle() throws Exception {

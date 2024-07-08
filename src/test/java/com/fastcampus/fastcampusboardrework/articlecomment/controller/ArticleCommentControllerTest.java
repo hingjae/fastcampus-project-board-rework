@@ -2,6 +2,7 @@ package com.fastcampus.fastcampusboardrework.articlecomment.controller;
 
 import com.fastcampus.fastcampusboardrework.articlecomment.controller.dto.request.ArticleCommentRequest;
 import com.fastcampus.fastcampusboardrework.articlecomment.service.ArticleCommentService;
+import com.fastcampus.fastcampusboardrework.common.config.TestSecurityConfig;
 import com.fastcampus.fastcampusboardrework.util.FormDataEncoder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.TestExecutionEvent;
+import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -20,7 +23,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@Import(FormDataEncoder.class)
+@Import({FormDataEncoder.class, TestSecurityConfig.class})
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 @SpringBootTest
@@ -31,6 +34,7 @@ class ArticleCommentControllerTest {
 
     @MockBean private ArticleCommentService articleCommentService;
 
+    @WithUserDetails(value = "userId", setupBefore = TestExecutionEvent.TEST_EXECUTION)
     @DisplayName("댓글을 생성한다.")
     @Test
     public void createArticleComment() throws Exception {
@@ -50,6 +54,7 @@ class ArticleCommentControllerTest {
                 .andDo(print());
     }
 
+    @WithUserDetails(value = "userId", setupBefore = TestExecutionEvent.TEST_EXECUTION)
     @DisplayName("댓글을 삭제한다.")
     @Test
     public void deleteArticleComment() throws Exception {

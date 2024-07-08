@@ -56,8 +56,6 @@ public class ArticleCommentService {
                 .orElseThrow(EntityNotFoundException::new);
 
         articleComment.validateUserAccount(userAccount);
-        articleCommentRepository.deleteById(articleCommentId);
+        articleCommentRepository.deleteByIdAndUserAccount_UserId(articleCommentId, userAccount.getUserId());
     }
-
-
 }

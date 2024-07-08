@@ -5,11 +5,13 @@ import com.fastcampus.fastcampusboardrework.article.controller.dto.response.Arti
 import com.fastcampus.fastcampusboardrework.article.controller.dto.response.ArticleWithCommentsResponse;
 import com.fastcampus.fastcampusboardrework.article.service.ArticleService;
 import com.fastcampus.fastcampusboardrework.article.service.PaginationService;
+import com.fastcampus.fastcampusboardrework.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -78,9 +80,8 @@ public class ArticleController {
     }
 
     @PostMapping ("/form")
-    public String create(SaveArticleRequest request) {
-        // TODO: 인증 정보를 넣어줘야 한다.
-        articleService.create("userId", request.toCreateDto());
+    public String create(SaveArticleRequest request, @AuthenticationPrincipal CustomUserDetails userDetails) {
+        articleService.create(userDetails.getUsername(), request.toCreateDto());
 
         return "redirect:/articles";
     }
@@ -96,17 +97,15 @@ public class ArticleController {
     }
 
     @PostMapping ("/{articleId}/form")
-    public String modify(@PathVariable Long articleId, SaveArticleRequest request) {
-        // TODO: 인증 정보를 넣어줘야 한다.
-        articleService.modify(articleId, "userId", request.toModifyDto());
+    public String modify(@PathVariable Long articleId, SaveArticleRequest request, @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        articleService.modify(articleId, customUserDetails.getUsername(), request.toModifyDto());
 
         return "redirect:/articles/" + articleId;
     }
 
     @PostMapping("/{articleId}/delete")
-    public String delete(@PathVariable Long articleId) {
-        // TODO: 인증 정보를 넣어줘야 한다.
-        articleService.delete(articleId, "userId");
+    public String delete(@PathVariable Long articleId, @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        articleService.delete(articleId, customUserDetails.getUsername());
 
         return "redirect:/articles";
     }

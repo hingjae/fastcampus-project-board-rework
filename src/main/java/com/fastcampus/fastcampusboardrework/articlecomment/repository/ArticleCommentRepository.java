@@ -7,4 +7,6 @@ import java.util.Set;
 
 public interface ArticleCommentRepository extends JpaRepository<ArticleComment, Long> {
     Set<ArticleComment> findByArticle_Id(Long articleId);
+
+    void deleteByIdAndUserAccount_UserId(Long id, String userId);
 }
