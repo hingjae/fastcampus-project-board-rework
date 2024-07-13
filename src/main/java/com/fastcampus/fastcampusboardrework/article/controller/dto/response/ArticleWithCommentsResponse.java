@@ -15,7 +15,7 @@ public record ArticleWithCommentsResponse(
         String nickname,
         String title,
         String content,
-        String hashtag,
+        Set<HashtagResponse> hashtags,
         LocalDateTime createdAt,
         Set<ArticleCommentResponse> articleComments
 ) {
@@ -31,7 +31,11 @@ public record ArticleWithCommentsResponse(
                 .nickname(articleWithComments.userAccountDto().nickname())
                 .title(articleWithComments.title())
                 .content(articleWithComments.content())
-                .hashtag(articleWithComments.hashtag())
+                .hashtags(
+                        articleWithComments.hashtags().hashtagDtos().stream()
+                                .map(HashtagResponse::from)
+                                .collect(Collectors.toSet())
+                )
                 .createdAt(articleWithComments.createdAt())
                 .articleComments(articleWithComments.articleComments().items()
                         .stream()

@@ -70,7 +70,6 @@ class ArticleCommentTest {
                 .userAccount(userAccount)
                 .title("test title")
                 .content("test content")
-                .hashtag("test tag")
                 .build();
     }
 }

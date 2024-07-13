@@ -67,7 +67,6 @@ public class ArticleController {
         model.addAttribute("articles", articles);
         model.addAttribute("hashtags", hashtags);
         model.addAttribute("paginationBarNumbers", barNumbers);
-        model.addAttribute("searchType", SearchType.HASHTAG);
 
         return "articles/search-hashtag";
     }

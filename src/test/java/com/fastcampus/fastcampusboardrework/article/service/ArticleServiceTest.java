@@ -2,11 +2,13 @@ package com.fastcampus.fastcampusboardrework.article.service;
 
 import com.fastcampus.fastcampusboardrework.article.controller.SearchType;
 import com.fastcampus.fastcampusboardrework.article.domain.Article;
+import com.fastcampus.fastcampusboardrework.article.domain.ArticleHashtag;
 import com.fastcampus.fastcampusboardrework.article.domain.exception.UserNotAuthorizedException;
 import com.fastcampus.fastcampusboardrework.article.repository.ArticleRepository;
 import com.fastcampus.fastcampusboardrework.article.service.dto.*;
 import com.fastcampus.fastcampusboardrework.articlecomment.domain.ArticleComment;
 import com.fastcampus.fastcampusboardrework.articlecomment.repository.ArticleCommentRepository;
+import com.fastcampus.fastcampusboardrework.hashtag.domain.Hashtag;
 import com.fastcampus.fastcampusboardrework.useraccount.domain.UserAccount;
 import com.fastcampus.fastcampusboardrework.useraccount.repository.UserAccountRepository;
 import jakarta.persistence.EntityManager;
@@ -22,6 +24,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -61,7 +64,6 @@ class ArticleServiceTest {
         assertThat(article.id()).isEqualTo(savedArticle.getId());
         assertThat(article.title()).isEqualTo(savedArticle.getTitle());
         assertThat(article.content()).isEqualTo(savedArticle.getContent());
-        assertThat(article.hashtag()).isEqualTo(savedArticle.getHashtag());
         assertThat(article.articleComments().items()).hasSize(1)
                 .extracting(ArticleCommentDto::content)
                 .containsExactly(savedArticleComment.getContent());
@@ -83,7 +85,6 @@ class ArticleServiceTest {
                 .orElseThrow(RuntimeException::new);
         assertThat(result.getTitle()).isEqualTo(articleModify.title());
         assertThat(result.getContent()).isEqualTo(articleModify.content());
-        assertThat(result.getHashtag()).isEqualTo(articleModify.hashtag());
     }
 
     @Transactional
@@ -251,7 +252,7 @@ class ArticleServiceTest {
         return ModifyArticleDto.builder()
                 .title("new title")
                 .content("new content")
-                .hashtag("new hashtag")
+                .hashtagNames("new hashtag")
                 .build();
     }
 
@@ -268,7 +269,30 @@ class ArticleServiceTest {
                 .userAccount(userAccount)
                 .title("article title")
                 .content("article content")
-                .hashtag("hashtag")
+                .build();
+    }
+
+    private Set<ArticleHashtag> getArticleHashtags() {
+        return Set.of(
+                ArticleHashtag.builder()
+                        .id(1L)
+                        .hashtag(getHashtag())
+                        .build()
+        );
+    }
+
+    private Hashtag getHashtag() {
+        return Hashtag.builder()
+                .id(1L)
+                .hashtagName("hashtag")
+                .build();
+    }
+
+    private Article getArticle() {
+        return Article.builder()
+                .id(1L)
+                .title("title")
+                .userAccount(getUser("user1", "email"))
                 .build();
     }
 
@@ -284,7 +308,7 @@ class ArticleServiceTest {
         return CreateArticleDto.builder()
                 .title("article title")
                 .content("article content")
-                .hashtag("hashtag")
+                .hashtagNames("hashtag")
                 .build();
     }
 

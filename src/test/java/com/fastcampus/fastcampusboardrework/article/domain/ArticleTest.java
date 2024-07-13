@@ -1,9 +1,15 @@
 package com.fastcampus.fastcampusboardrework.article.domain;
 
 import com.fastcampus.fastcampusboardrework.article.domain.exception.UserNotAuthorizedException;
+import com.fastcampus.fastcampusboardrework.hashtag.domain.Hashtag;
 import com.fastcampus.fastcampusboardrework.useraccount.domain.UserAccount;
+import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -16,17 +22,14 @@ class ArticleTest {
                 .id(1L)
                 .title("article title")
                 .content("article content")
-                .hashtag("article hashtag")
                 .build();
         String newTitle = "newTitle";
         String newContent = "newContent";
-        String newHashtag = "newHashtag";
 
-        article.modify(newTitle, newContent, newHashtag);
+        article.modify(newTitle, newContent);
 
         assertThat(article.getTitle()).isEqualTo(newTitle);
         assertThat(article.getContent()).isEqualTo(newContent);
-        assertThat(article.getHashtag()).isEqualTo(newHashtag);
     }
 
     @DisplayName("게시판과 유저가 서로 연관관계이다.")
@@ -51,12 +54,55 @@ class ArticleTest {
                 .hasMessage("User Not Authorized");;
     }
 
+    @DisplayName("Article에 ArticleHashtags를 저장한다.")
+    @Test
+    public void setArticleHashtags() {
+        Hashtag hashtag1 = getHashtag(1L, "hashtag1");
+        Hashtag hashtag2 = getHashtag(2L, "hashtag2");
+        List<Hashtag> hashtags = List.of(hashtag1, hashtag2);
+        List<ArticleHashtag> articleHashtags = getArticleHashtags(hashtags);
+        Article article = getArticle(getUserAccount("user1", "email"));
+
+        article.addArticleHashtags(articleHashtags);
+
+        assertThat(article.getArticleHashtags()).hasSize(2)
+                .extracting(articleHashtag -> articleHashtag.getArticle().getTitle(), articleHashtag -> articleHashtag.getHashtag().getHashtagName())
+                .containsExactlyInAnyOrder(
+                        Tuple.tuple("test title", hashtag1.getHashtagName()),
+                        Tuple.tuple("test title", hashtag2.getHashtagName())
+                );
+    }
+
+    private List<ArticleHashtag> getArticleHashtags(List<Hashtag> hashtags) {
+        Long id = 1L;
+        List<ArticleHashtag> articleHashtags = new ArrayList<>();
+        for (Hashtag hashtag : hashtags) {
+            articleHashtags.add(getArticleHashtag(hashtag, id));
+            id++;
+        }
+        return articleHashtags;
+    }
+
+    private ArticleHashtag getArticleHashtag(Hashtag hashtag, Long id) {
+        return ArticleHashtag.builder()
+                .id(id)
+                .hashtag(hashtag)
+                .build();
+    }
+
+    private Hashtag getHashtag(Long id, String hashtagName) {
+        return Hashtag.builder()
+                .id(id)
+                .hashtagName(hashtagName)
+                .build();
+    }
+
     private Article getArticle(UserAccount userAccount) {
         return Article.builder()
                 .userAccount(userAccount)
                 .title("test title")
                 .content("test content")
-                .hashtag("test tag")
+                .articleHashtags(new LinkedHashSet<>())
                 .build();
     }
 

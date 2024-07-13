@@ -2,11 +2,14 @@ package com.fastcampus.fastcampusboardrework.article.service;
 
 import com.fastcampus.fastcampusboardrework.article.controller.SearchType;
 import com.fastcampus.fastcampusboardrework.article.domain.Article;
+import com.fastcampus.fastcampusboardrework.article.domain.ArticleHashtag;
 import com.fastcampus.fastcampusboardrework.article.repository.ArticleRepository;
 import com.fastcampus.fastcampusboardrework.article.service.dto.CreateArticleDto;
 import com.fastcampus.fastcampusboardrework.article.service.dto.ArticleDto;
 import com.fastcampus.fastcampusboardrework.article.service.dto.ModifyArticleDto;
 import com.fastcampus.fastcampusboardrework.article.service.dto.ArticleWithCommentsDto;
+import com.fastcampus.fastcampusboardrework.hashtag.domain.Hashtag;
+import com.fastcampus.fastcampusboardrework.hashtag.service.HashtagService;
 import com.fastcampus.fastcampusboardrework.useraccount.domain.UserAccount;
 import com.fastcampus.fastcampusboardrework.useraccount.repository.UserAccountRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -23,6 +26,7 @@ import java.util.List;
 public class ArticleService {
     private final ArticleRepository articleRepository;
     private final UserAccountRepository userAccountRepository;
+    private final HashtagService hashtagService;
 
     @Transactional(readOnly = true)
     public Page<ArticleDto> getArticlePage(SearchType searchType, String searchKeyword, Pageable pageable) {
@@ -42,7 +46,15 @@ public class ArticleService {
     public Long create(String userId, CreateArticleDto dto) {
         UserAccount userAccount = userAccountRepository.findById(userId)
                 .orElseThrow(EntityNotFoundException::new);
-        return articleRepository.save(dto.toEntity(userAccount))
+        List<Hashtag> hashtags = hashtagService.createByHashtagNames(List.of(dto.hashtagNames()));
+
+        List<ArticleHashtag> articleHashtags = ArticleHashtag.create(hashtags);
+
+        Article article = dto.toEntity(userAccount);
+
+        article.addArticleHashtags(articleHashtags);
+
+        return articleRepository.save(article)
                 .getId();
     }
 
@@ -53,7 +65,7 @@ public class ArticleService {
                 .orElseThrow(() -> new EntityNotFoundException("UserAccount not found"));
 
         article.validateUserAccount(userAccount);
-        article.modify(dto.title(), dto.content(), dto.hashtag());
+        article.modify(dto.title(), dto.content());
     }
 
     @Transactional

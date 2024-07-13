@@ -17,6 +17,8 @@ import org.springframework.data.domain.Sort;
 import java.util.List;
 
 import static com.fastcampus.fastcampusboardrework.article.domain.QArticle.article;
+import static com.fastcampus.fastcampusboardrework.article.domain.QArticleHashtag.articleHashtag;
+import static com.fastcampus.fastcampusboardrework.hashtag.domain.QHashtag.hashtag;
 import static com.fastcampus.fastcampusboardrework.useraccount.domain.QUserAccount.userAccount;
 
 @RequiredArgsConstructor
@@ -46,6 +48,41 @@ public class ArticleRepositoryImpl implements ArticleRepositoryCustom {
         return new PageImpl<>(content, pageable, total);
     }
 
+    @Override
+    public Page<Article> findByHashtag(String searchValue, Pageable pageable) {
+        List<Article> content = query
+                .selectFrom(article)
+                .join(article.articleHashtags, articleHashtag).fetchJoin()
+                .join(articleHashtag.hashtag, hashtag)
+                .where(hashtag.hashtagName.eq(searchValue))
+                .orderBy(createOrderSpecifiers(pageable.getSort()))
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        Long total = query
+                .select(article.count())
+                .from(article)
+                .join(article.articleHashtags, articleHashtag)
+                .join(articleHashtag.hashtag, hashtag)
+                .where(hashtag.hashtagName.eq(searchValue))
+                .fetchOne();
+
+        return new PageImpl<>(content, pageable, total);
+    }
+
+    @Override
+    public List<String> findAllHashtagLimit100() {
+        return query
+                .select(hashtag.hashtagName)
+                .from(articleHashtag)
+                .join(articleHashtag.hashtag, hashtag)
+                .groupBy(hashtag)
+                .orderBy(hashtag.count().desc())
+                .limit(100)
+                .fetch();
+    }
+
     private BooleanExpression getKeywordContains(SearchType searchType, String searchKeyword) {
         if (searchKeyword == null || searchKeyword.isEmpty()) {
             return null;
@@ -56,7 +93,6 @@ public class ArticleRepositoryImpl implements ArticleRepositoryCustom {
             case CONTENT -> article.content.containsIgnoreCase(searchKeyword);
             case ID -> article.userAccount.userId.eq(searchKeyword);
             case NICKNAME -> article.userAccount.nickname.eq(searchKeyword); // TODO left join 페치조인에는 별칭을 걸면 안되는데,,
-            case HASHTAG -> article.hashtag.eq(searchKeyword);
         };
     }
 
@@ -67,45 +103,5 @@ public class ArticleRepositoryImpl implements ArticleRepositoryCustom {
                         new PathBuilder<>(QArticle.class, article.getMetadata().getName()).get(order.getProperty())
                 ))
                 .toArray(OrderSpecifier[]::new);
-    }
-
-    @Override
-    public Page<Article> findByHashtag(String hashtag, Pageable pageable) {
-        List<Article> content = query
-                .selectFrom(article)
-                .leftJoin(article.userAccount, userAccount).fetchJoin()
-                .where(hashtagContains(hashtag))
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
-                .orderBy(createOrderSpecifiers(pageable.getSort()))
-                .fetch();
-
-        Long total = query
-                .select(article.count())
-                .from(article)
-                .leftJoin(article.userAccount, userAccount)
-                .where(hashtagContains(hashtag))
-                .fetchOne();
-
-        return new PageImpl<>(content, pageable, total);
-    }
-
-    private BooleanExpression hashtagContains(String hashtag) {
-        if (hashtag == null || hashtag.isEmpty()) {
-            return null;
-        }
-        return article.hashtag.eq(hashtag);
-    }
-
-    @Override
-    public List<String> findAllHashtagLimit100() {
-        return query
-                .selectDistinct(article.hashtag)
-                .from(article)
-                .where(article.hashtag.isNotNull())
-                .limit(100)
-                .groupBy(article.hashtag)
-                .orderBy(article.hashtag.count().desc())
-                .fetch();
     }
 }

@@ -17,7 +17,6 @@ class SaveArticleRequestTest {
 
         assertThat(dto.title()).isEqualTo(request.title());
         assertThat(dto.content()).isEqualTo(request.content());
-        assertThat(dto.hashtag()).isEqualTo(request.hashtag());
     }
 
     @DisplayName("SaveArticleRequest를 ModifyArticleDto로 반환한다.")
@@ -29,14 +28,12 @@ class SaveArticleRequestTest {
 
         assertThat(dto.title()).isEqualTo(request.title());
         assertThat(dto.content()).isEqualTo(request.content());
-        assertThat(dto.hashtag()).isEqualTo(request.hashtag());
     }
 
     private SaveArticleRequest getSaveArticleRequest() {
         return SaveArticleRequest.builder()
                 .title("foo title")
                 .content("foo content")
-                .hashtag("hashtag")
                 .build();
     }
 

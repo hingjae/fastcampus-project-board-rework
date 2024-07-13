@@ -6,8 +6,7 @@ import lombok.Builder;
 
 public record SaveArticleRequest(
         String title,
-        String content,
-        String hashtag
+        String content
 ) {
     @Builder
     public SaveArticleRequest {
@@ -17,7 +16,6 @@ public record SaveArticleRequest(
         return CreateArticleDto.builder()
                 .title(title)
                 .content(content)
-                .hashtag(hashtag)
                 .build();
     }
 
@@ -25,7 +23,6 @@ public record SaveArticleRequest(
         return ModifyArticleDto.builder()
                 .title(title)
                 .content(content)
-                .hashtag(hashtag)
                 .build();
     }
 }

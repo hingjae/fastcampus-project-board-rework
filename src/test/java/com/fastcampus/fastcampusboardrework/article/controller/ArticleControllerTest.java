@@ -3,10 +3,7 @@ package com.fastcampus.fastcampusboardrework.article.controller;
 import com.fastcampus.fastcampusboardrework.article.controller.dto.request.SaveArticleRequest;
 import com.fastcampus.fastcampusboardrework.article.service.ArticleService;
 import com.fastcampus.fastcampusboardrework.article.service.PaginationService;
-import com.fastcampus.fastcampusboardrework.article.service.dto.ArticleCommentDtos;
-import com.fastcampus.fastcampusboardrework.article.service.dto.ArticleDto;
-import com.fastcampus.fastcampusboardrework.article.service.dto.ArticleWithCommentsDto;
-import com.fastcampus.fastcampusboardrework.article.service.dto.UserAccountDto;
+import com.fastcampus.fastcampusboardrework.article.service.dto.*;
 import com.fastcampus.fastcampusboardrework.common.config.TestSecurityConfig;
 import com.fastcampus.fastcampusboardrework.security.CustomUserDetails;
 import com.fastcampus.fastcampusboardrework.util.FormDataEncoder;
@@ -39,7 +36,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-//@WebMvcTest(ArticleController.class)
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 @SpringBootTest
@@ -84,6 +80,7 @@ class ArticleControllerTest {
                 .id(1L)
                 .userAccountDto(getUserAccountDto())
                 .articleComments(getArticleCommentsDto())
+                .hashtags(getHashtagsDto())
                 .build();
 
         given(articleService.getArticleWithComments(1L))
@@ -98,6 +95,12 @@ class ArticleControllerTest {
                 .andExpect(model().attributeExists("articleComments"))
                 .andExpect(view().name("articles/detail"))
                 .andDo(print());
+    }
+
+    private HashtagDtos getHashtagsDto() {
+        return HashtagDtos.builder()
+                .hashtagDtos(Set.of())
+                .build();
     }
 
     @DisplayName("헤시테그 검색 페이지를 반환한다.")
@@ -118,7 +121,6 @@ class ArticleControllerTest {
                 .andExpect(model().attributeExists("articles"))
                 .andExpect(model().attributeExists("hashtags"))
                 .andExpect(model().attributeExists("paginationBarNumbers"))
-                .andExpect(model().attributeExists("searchType"))
                 .andExpect(view().name("articles/search-hashtag"))
                 .andDo(print());
     }
@@ -145,7 +147,6 @@ class ArticleControllerTest {
                 .andExpect(model().attributeExists("articles"))
                 .andExpect(model().attributeExists("hashtags"))
                 .andExpect(model().attributeExists("paginationBarNumbers"))
-                .andExpect(model().attributeExists("searchType"))
                 .andExpect(view().name("articles/search-hashtag"))
                 .andDo(print());
     }
@@ -238,7 +239,6 @@ class ArticleControllerTest {
         return SaveArticleRequest.builder()
                 .title("new Title")
                 .content("new Content")
-                .hashtag("foo")
                 .build();
     }
 
@@ -248,7 +248,7 @@ class ArticleControllerTest {
                 .userAccountDto(getUserAccountDto())
                 .title("title")
                 .content("content")
-                .hashtag("hashtag")
+                .hashtags(getHashtagsDto())
                 .build();
     }
 

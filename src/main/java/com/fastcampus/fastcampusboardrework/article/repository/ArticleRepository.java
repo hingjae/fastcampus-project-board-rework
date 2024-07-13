@@ -11,7 +11,8 @@ public interface ArticleRepository extends JpaRepository<Article, Long>, Article
     @Query("select a " +
             " from Article a " +
             " left join fetch a.articleComments" +
-            " join fetch a.userAccount" +
+            " left join fetch a.userAccount" +
+            " left join fetch a.articleHashtags" +
             " where a.id = :id")
     Optional<Article> findByIdWithUserAccountAndArticleComments(@Param("id") Long id);
 

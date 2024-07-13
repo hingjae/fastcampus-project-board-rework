@@ -7,12 +7,18 @@ import com.fastcampus.fastcampusboardrework.useraccount.domain.UserAccount;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(indexes = {
+        @Index(columnList = "title"),
+        @Index(columnList = "createdAt"),
+        @Index(columnList = "createdBy")
+})
 @Entity
 public class Article extends BaseEntity {
     @Id
@@ -28,21 +34,31 @@ public class Article extends BaseEntity {
 
     @Setter @Column(length = 1000) private String content;
 
-    @Setter private String hashtag;
-
     @OneToMany(mappedBy = "article", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("createdAt DESC")
     @ToString.Exclude
     private Set<ArticleComment> articleComments = new LinkedHashSet<>();
 
+    @OneToMany(mappedBy = "article", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ArticleHashtag> articleHashtags = new LinkedHashSet<>();
+
     @Builder
-    public Article(Long id, UserAccount userAccount, String title, String content, String hashtag, Set<ArticleComment> articleComments) {
+    public Article(Long id, UserAccount userAccount, String title, String content, Set<ArticleComment> articleComments, Set<ArticleHashtag> articleHashtags) {
         this.id = id;
         this.userAccount = userAccount;
         this.title = title;
         this.content = content;
-        this.hashtag = hashtag;
         this.articleComments = articleComments;
+        this.articleHashtags = articleHashtags;
+    }
+
+    public static Article create(UserAccount userAccount, String title, String content) {
+        return Article.builder()
+                .userAccount(userAccount)
+                .title(title)
+                .content(content)
+                .articleHashtags(new LinkedHashSet<>())
+                .build();
     }
 
     @Override
@@ -57,10 +73,9 @@ public class Article extends BaseEntity {
         return Objects.hashCode(id);
     }
 
-    public void modify(String title, String content, String hashtag) {
+    public void modify(String title, String content) {
         this.title = title;
         this.content = content;
-        this.hashtag = hashtag;
     }
 
     public void validateUserAccount(UserAccount userAccount) {
@@ -71,5 +86,16 @@ public class Article extends BaseEntity {
 
     private boolean belongsTo(UserAccount userAccount) {
         return this.userAccount.equals(userAccount);
+    }
+
+    public void addArticleHashtag(ArticleHashtag articleHashtag) {
+        this.articleHashtags.add(articleHashtag);
+        articleHashtag.setArticle(this);
+    }
+
+    public void addArticleHashtags(Collection<ArticleHashtag> articleHashtags) {
+        for (ArticleHashtag articleHashtag : articleHashtags) {
+            this.addArticleHashtag(articleHashtag);
+        }
     }
 }
