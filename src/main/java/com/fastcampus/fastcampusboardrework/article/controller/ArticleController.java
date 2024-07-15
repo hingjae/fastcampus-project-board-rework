@@ -3,6 +3,7 @@ package com.fastcampus.fastcampusboardrework.article.controller;
 import com.fastcampus.fastcampusboardrework.article.controller.dto.request.SaveArticleRequest;
 import com.fastcampus.fastcampusboardrework.article.controller.dto.response.ArticleResponse;
 import com.fastcampus.fastcampusboardrework.article.controller.dto.response.ArticleWithCommentsResponse;
+import com.fastcampus.fastcampusboardrework.article.controller.dto.response.ModifyArticleResponse;
 import com.fastcampus.fastcampusboardrework.article.service.ArticleService;
 import com.fastcampus.fastcampusboardrework.article.service.PaginationService;
 import com.fastcampus.fastcampusboardrework.security.CustomUserDetails;
@@ -38,6 +39,7 @@ public class ArticleController {
         model.addAttribute("articles", articlePage);
         model.addAttribute("paginationBarNumbers", barNumbers);
         model.addAttribute("searchTypes", SearchType.values());
+        model.addAttribute("searchTypeHashtag", SearchType.HASHTAG);
 
         return "articles/index";
     }
@@ -49,6 +51,7 @@ public class ArticleController {
         model.addAttribute("article", article);
         model.addAttribute("articleComments", article.articleComments());
         model.addAttribute("totalCount", articleService.getArticleCount()); // 마지막 게시글일 경우 다음 게시글 버튼 비활성화
+        model.addAttribute("searchTypeHashtag", SearchType.HASHTAG);
 
         return "articles/detail";
     }
@@ -67,6 +70,7 @@ public class ArticleController {
         model.addAttribute("articles", articles);
         model.addAttribute("hashtags", hashtags);
         model.addAttribute("paginationBarNumbers", barNumbers);
+        model.addAttribute("searchType", SearchType.HASHTAG);
 
         return "articles/search-hashtag";
     }
@@ -87,7 +91,7 @@ public class ArticleController {
 
     @GetMapping("/{articleId}/form")
     public String modifyArticleForm(@PathVariable Long articleId, Model model) {
-        ArticleResponse article = ArticleResponse.from(articleService.getByIdWithUserAccount(articleId));
+        ModifyArticleResponse article = ModifyArticleResponse.from(articleService.getByIdWithUserAccount(articleId));
 
         model.addAttribute("article", article);
         model.addAttribute("formStatus", FormStatus.UPDATE);

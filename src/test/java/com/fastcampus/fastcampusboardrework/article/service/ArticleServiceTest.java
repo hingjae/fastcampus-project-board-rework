@@ -4,6 +4,7 @@ import com.fastcampus.fastcampusboardrework.article.controller.SearchType;
 import com.fastcampus.fastcampusboardrework.article.domain.Article;
 import com.fastcampus.fastcampusboardrework.article.domain.ArticleHashtag;
 import com.fastcampus.fastcampusboardrework.article.domain.exception.UserNotAuthorizedException;
+import com.fastcampus.fastcampusboardrework.article.repository.ArticleHashtagRepository;
 import com.fastcampus.fastcampusboardrework.article.repository.ArticleRepository;
 import com.fastcampus.fastcampusboardrework.article.service.dto.*;
 import com.fastcampus.fastcampusboardrework.articlecomment.domain.ArticleComment;
@@ -11,6 +12,7 @@ import com.fastcampus.fastcampusboardrework.articlecomment.repository.ArticleCom
 import com.fastcampus.fastcampusboardrework.hashtag.domain.Hashtag;
 import com.fastcampus.fastcampusboardrework.useraccount.domain.UserAccount;
 import com.fastcampus.fastcampusboardrework.useraccount.repository.UserAccountRepository;
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityManager;
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.DisplayName;
@@ -23,6 +25,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -39,15 +42,43 @@ class ArticleServiceTest {
     @Autowired private ArticleRepository articleRepository;
     @Autowired private ArticleCommentRepository articleCommentRepository;
     @Autowired private EntityManager em;
+    @Autowired
+    private ArticleHashtagRepository articleHashtagRepository;
 
     @Transactional
     @DisplayName("게시글을 생성한다.")
     @Test
     public void createArticle() {
         UserAccount userAccount = saveUser("user1", "aaa@bbb.com");
-        CreateArticleDto dto = getArticleWithCommentsCreateDto();
+        CreateArticleDto dto = getCreateArticleDto();
 
-        articleService.create(userAccount.getUserId(), dto);
+        Long savedArticleId = articleService.create(userAccount.getUserId(), dto);
+
+        Article article = articleRepository.findById(savedArticleId)
+                .orElseThrow(EntityExistsException::new);
+
+        assertThat(article).isNotNull();
+    }
+
+    @Transactional
+    @DisplayName("Hashtag가 포함된 게시글을 생성한다.")
+    @Test
+    public void createArticleWithHashtag() {
+        UserAccount userAccount = saveUser("user1", "aaa@bbb.com");
+        CreateArticleDto dto = getCreateArticleDto("title", "foo bar hello world #java #foo #bar");
+
+        Long savedArticleId = articleService.create(userAccount.getUserId(), dto);
+
+        flushAndClear();
+        Article article = articleRepository.findById(savedArticleId)
+                .orElseThrow(EntityExistsException::new);
+
+        assertThat(article).isNotNull();
+        assertThat(article.getTitle()).isEqualTo("title");
+        assertThat(article.getContent()).isEqualTo("foo bar hello world #java #foo #bar");
+        assertThat(article.getArticleHashtags()).hasSize(3)
+                .extracting(articleHashtag -> articleHashtag.getHashtag().getHashtagName())
+                .containsExactlyInAnyOrder("foo", "bar", "java");
     }
 
     @Transactional
@@ -70,14 +101,14 @@ class ArticleServiceTest {
     }
 
     @Transactional
-    @DisplayName("게시글을 업데이트 한다.")
+    @DisplayName("게시글을 수정 한다.")
     @Test
     public void modifyArticle() {
         UserAccount savedUserAccount = saveUser("user1", "aaa@bbb.com");
         Article savedArticle = saveArticle(savedUserAccount);
         flushAndClear();
 
-        ModifyArticleDto articleModify = getArticleWithCommentsModifyDto();
+        ModifyArticleDto articleModify = getModifyArticleDto();
         articleService.modify(savedArticle.getId(), savedUserAccount.getUserId(), articleModify);
         flushAndClear();
 
@@ -85,6 +116,67 @@ class ArticleServiceTest {
                 .orElseThrow(RuntimeException::new);
         assertThat(result.getTitle()).isEqualTo(articleModify.title());
         assertThat(result.getContent()).isEqualTo(articleModify.content());
+    }
+
+    @Transactional
+    @DisplayName("게시글을 수정한다. 해시테그 내용도 수정된다.")
+    @Test
+    public void modifyArticleWithHashtags() {
+        UserAccount savedUserAccount = saveUser("user1", "aaa@bbb.com");
+        Article savedArticle = saveArticle(savedUserAccount);
+        flushAndClear();
+
+        ModifyArticleDto dto = getModifyArticleDto("new title", "hello world #java #foo #world");
+        articleService.modify(savedArticle.getId(), savedUserAccount.getUserId(), dto);
+        flushAndClear();
+
+        Article result = articleRepository.findById(savedArticle.getId())
+                .orElseThrow(RuntimeException::new);
+        assertThat(result.getTitle()).isEqualTo(dto.title());
+        assertThat(result.getContent()).isEqualTo(dto.content());
+        assertThat(result.getArticleHashtags()).hasSize(3)
+                .extracting(articleHashtag -> articleHashtag.getHashtag().getHashtagName())
+                .containsExactlyInAnyOrder("java", "foo", "world");
+    }
+
+    @Transactional
+    @DisplayName("게시글을 수정한다. 기존의 해시태그는 지운다.")
+    @Test
+    public void modifyArticleWithHashtags2() {
+        UserAccount savedUserAccount = saveUser("user1", "aaa@bbb.com");
+        Article savedArticle = articleRepository.save(getArticleByParam(savedUserAccount, "title", "hello world #java #foo #world"));
+        flushAndClear();
+
+        ModifyArticleDto dto = getModifyArticleDto("new title", "hello world #java #foo #bar");
+        articleService.modify(savedArticle.getId(), savedUserAccount.getUserId(), dto);
+        flushAndClear();
+
+        Article result = articleRepository.findById(savedArticle.getId())
+                .orElseThrow(RuntimeException::new);
+        assertThat(result.getTitle()).isEqualTo(dto.title());
+        assertThat(result.getContent()).isEqualTo(dto.content());
+        assertThat(result.getArticleHashtags()).hasSize(3)
+                .extracting(articleHashtag -> articleHashtag.getHashtag().getHashtagName())
+                .containsExactlyInAnyOrder("java", "foo", "bar");
+    }
+
+    @Transactional
+    @DisplayName("기존의 해시태그는 지우고 새로운 해시테그로 게시글을 수정한다. ")
+    @Test
+    public void modifyArticleWithHashtags3() {
+        UserAccount savedUserAccount = saveUser("user1", "aaa@bbb.com");
+        Article savedArticle = articleRepository.save(getArticleByParam(savedUserAccount, "title", "hello world #java #foo #world"));
+        flushAndClear();
+
+        ModifyArticleDto dto = getModifyArticleDto("new title", "hello world java foo bar");
+        articleService.modify(savedArticle.getId(), savedUserAccount.getUserId(), dto);
+        flushAndClear();
+
+        Article result = articleRepository.findById(savedArticle.getId())
+                .orElseThrow(RuntimeException::new);
+        assertThat(result.getTitle()).isEqualTo(dto.title());
+        assertThat(result.getContent()).isEqualTo(dto.content());
+        assertThat(result.getArticleHashtags()).isEmpty();
     }
 
     @Transactional
@@ -96,7 +188,7 @@ class ArticleServiceTest {
         Article savedArticle = saveArticle(savedUserAccount1);
         flushAndClear();
 
-        ModifyArticleDto articleModify = getArticleWithCommentsModifyDto();
+        ModifyArticleDto articleModify = getModifyArticleDto();
         assertThatThrownBy(() -> articleService.modify(savedArticle.getId(), savedUserAccount2.getUserId(), articleModify))
                 .isInstanceOf(UserNotAuthorizedException.class);
     }
@@ -111,19 +203,22 @@ class ArticleServiceTest {
     @Test
     public void deleteArticle() {
         UserAccount savedUserAccount = saveUser("user1", "aaa@bbb.com");
-        Article savedArticle = saveArticle(savedUserAccount);
+        Article savedArticle = articleRepository.save(getArticleByParam(savedUserAccount, "title", "hello world #java #foo #world"));
         flushAndClear();
 
         articleService.delete(savedArticle.getId(), "user1");
+        flushAndClear();
 
         Optional<Article> articleOptional = articleRepository.findById(savedArticle.getId());
+        List<ArticleHashtag> articleHashtagRepositoryAll = articleHashtagRepository.findAll();
         assertThat(articleOptional.isPresent()).isFalse();
+        assertThat(articleHashtagRepositoryAll).isEmpty();
     }
 
     @Transactional
     @DisplayName("게시글을 페이지로 조회한다.")
     @Test
-    public void getArticleWithCommentsPage() {
+    public void getArticlePage() {
         initArticlePageTestData();
 
         Page<ArticleDto> articlePage = articleService.getArticlePage(null, null, PageRequest.of(0, 10));
@@ -148,7 +243,7 @@ class ArticleServiceTest {
     @Transactional
     @DisplayName("검색 조건으로 게시글을 페이지로 조회한다.")
     @Test
-    public void getArticleWithCommentsPageByParam() {
+    public void getArticlePageByParam() {
         initArticlePageTestData();
         Page<ArticleDto> articlePage = articleService.getArticlePage(SearchType.TITLE, "foo", PageRequest.of(0, 10));
 
@@ -169,7 +264,7 @@ class ArticleServiceTest {
     @Transactional
     @DisplayName("정렬 조건으로 게시글을 페이지로 조회한다.")
     @Test
-    public void getArticleWithCommentsPageByOrder() {
+    public void getArticlePageByOrder() {
         initArticlePageTestData();
         Page<ArticleDto> articlePage = articleService.getArticlePage(null, null, PageRequest.of(0, 10, Sort.by("content").descending()));
 
@@ -197,12 +292,10 @@ class ArticleServiceTest {
         Article article = saveArticle(saveUser("fooUserId", "fooEmail"));
         flushAndClear();
 
-        ArticleDto result = articleService.getByIdWithUserAccount(article.getId());
+        ModifyArticleDto result = articleService.getByIdWithUserAccount(article.getId());
 
         assertThat(result.title()).isEqualTo(article.getTitle());
         assertThat(result.content()).isEqualTo(article.getContent());
-        assertThat(result.userAccountDto().userId()).isEqualTo(article.getUserAccount().getUserId());
-        assertThat(result.userAccountDto().email()).isEqualTo(article.getUserAccount().getEmail());
     }
 
     private void initArticlePageTestData() {
@@ -236,11 +329,11 @@ class ArticleServiceTest {
     }
 
     private void saveArticleByParam(UserAccount user, String articleTitle, String articleContent) {
-        Article article = getArticleWithCommentsByParam(user, articleTitle, articleContent);
+        Article article = getArticleByParam(user, articleTitle, articleContent);
         articleRepository.save(article);
     }
 
-    private Article getArticleWithCommentsByParam(UserAccount user, String articleTitle, String articleContent) {
+    private Article getArticleByParam(UserAccount user, String articleTitle, String articleContent) {
         return Article.builder()
                 .userAccount(user)
                 .title(articleTitle)
@@ -248,23 +341,29 @@ class ArticleServiceTest {
                 .build();
     }
 
-    private ModifyArticleDto getArticleWithCommentsModifyDto() {
+    private ModifyArticleDto getModifyArticleDto() {
         return ModifyArticleDto.builder()
                 .title("new title")
                 .content("new content")
-                .hashtagNames("new hashtag")
+                .build();
+    }
+
+    private ModifyArticleDto getModifyArticleDto(String title, String content) {
+        return ModifyArticleDto.builder()
+                .title(title)
+                .content(content)
                 .build();
     }
 
     private ArticleComment saveArticleComment(Article savedArticle, UserAccount userAccount) {
-        return articleCommentRepository.save(getArticleWithCommentsComment(savedArticle, userAccount));
+        return articleCommentRepository.save(getArticleComment(savedArticle, userAccount));
     }
 
     private Article saveArticle(UserAccount userAccount) {
-        return articleRepository.save(getArticleWithComments(userAccount));
+        return articleRepository.save(getArticle(userAccount));
     }
 
-    private Article getArticleWithComments(UserAccount userAccount) {
+    private Article getArticle(UserAccount userAccount) {
         return Article.builder()
                 .userAccount(userAccount)
                 .title("article title")
@@ -296,7 +395,7 @@ class ArticleServiceTest {
                 .build();
     }
 
-    private ArticleComment getArticleWithCommentsComment(Article savedArticle, UserAccount userAccount) {
+    private ArticleComment getArticleComment(Article savedArticle, UserAccount userAccount) {
         return ArticleComment.builder()
                 .article(savedArticle)
                 .userAccount(userAccount)
@@ -304,11 +403,17 @@ class ArticleServiceTest {
                 .build();
     }
 
-    private CreateArticleDto getArticleWithCommentsCreateDto() {
+    private CreateArticleDto getCreateArticleDto() {
         return CreateArticleDto.builder()
                 .title("article title")
                 .content("article content")
-                .hashtagNames("hashtag")
+                .build();
+    }
+
+    private CreateArticleDto getCreateArticleDto(String title, String content) {
+        return CreateArticleDto.builder()
+                .title(title)
+                .content(content)
                 .build();
     }
 

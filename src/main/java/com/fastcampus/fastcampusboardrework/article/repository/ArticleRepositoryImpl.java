@@ -52,9 +52,10 @@ public class ArticleRepositoryImpl implements ArticleRepositoryCustom {
     public Page<Article> findByHashtag(String searchValue, Pageable pageable) {
         List<Article> content = query
                 .selectFrom(article)
-                .join(article.articleHashtags, articleHashtag).fetchJoin()
-                .join(articleHashtag.hashtag, hashtag)
-                .where(hashtag.hashtagName.eq(searchValue))
+                .leftJoin(article.articleHashtags, articleHashtag).fetchJoin()
+                .leftJoin(articleHashtag.hashtag, hashtag).fetchJoin()
+                .leftJoin(article.userAccount, userAccount).fetchJoin()
+                .where(hashtagNameEq(searchValue))
                 .orderBy(createOrderSpecifiers(pageable.getSort()))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -63,12 +64,21 @@ public class ArticleRepositoryImpl implements ArticleRepositoryCustom {
         Long total = query
                 .select(article.count())
                 .from(article)
-                .join(article.articleHashtags, articleHashtag)
-                .join(articleHashtag.hashtag, hashtag)
-                .where(hashtag.hashtagName.eq(searchValue))
+                .leftJoin(article.articleHashtags, articleHashtag)
+                .leftJoin(articleHashtag.hashtag, hashtag)
+                .leftJoin(article.userAccount, userAccount)
+                .where(hashtagNameEq(searchValue))
                 .fetchOne();
 
         return new PageImpl<>(content, pageable, total);
+    }
+
+    private BooleanExpression hashtagNameEq(String searchValue) {
+        if (searchValue == null || searchValue.isEmpty()) {
+            return null;
+        }
+
+        return hashtag.hashtagName.eq(searchValue);
     }
 
     @Override
@@ -93,6 +103,7 @@ public class ArticleRepositoryImpl implements ArticleRepositoryCustom {
             case CONTENT -> article.content.containsIgnoreCase(searchKeyword);
             case ID -> article.userAccount.userId.eq(searchKeyword);
             case NICKNAME -> article.userAccount.nickname.eq(searchKeyword); // TODO left join 페치조인에는 별칭을 걸면 안되는데,,
+            default -> null;
         };
     }
 

@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
@@ -31,7 +32,7 @@ public class ArticleHashtag {
         this.hashtag = hashtag;
     }
 
-    public static List<ArticleHashtag> create(List<Hashtag> hashtags) {
+    public static List<ArticleHashtag> create(Set<Hashtag> hashtags) {
         return hashtags.stream()
                 .map(ArticleHashtag::createArticleHashtag)
                 .toList();

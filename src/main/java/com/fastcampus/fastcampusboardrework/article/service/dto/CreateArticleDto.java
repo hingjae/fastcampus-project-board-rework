@@ -6,8 +6,7 @@ import lombok.Builder;
 
 public record CreateArticleDto(
         String title,
-        String content,
-        String hashtagNames
+        String content
 ) {
     @Builder
     public CreateArticleDto {

@@ -7,10 +7,7 @@ import com.fastcampus.fastcampusboardrework.useraccount.domain.UserAccount;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -40,10 +37,10 @@ public class Article extends BaseEntity {
     private Set<ArticleComment> articleComments = new LinkedHashSet<>();
 
     @OneToMany(mappedBy = "article", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<ArticleHashtag> articleHashtags = new LinkedHashSet<>();
+    private List<ArticleHashtag> articleHashtags = new ArrayList<>();
 
     @Builder
-    public Article(Long id, UserAccount userAccount, String title, String content, Set<ArticleComment> articleComments, Set<ArticleHashtag> articleHashtags) {
+    public Article(Long id, UserAccount userAccount, String title, String content, Set<ArticleComment> articleComments, List<ArticleHashtag> articleHashtags) {
         this.id = id;
         this.userAccount = userAccount;
         this.title = title;
@@ -57,7 +54,7 @@ public class Article extends BaseEntity {
                 .userAccount(userAccount)
                 .title(title)
                 .content(content)
-                .articleHashtags(new LinkedHashSet<>())
+                .articleHashtags(new ArrayList<>())
                 .build();
     }
 
@@ -97,5 +94,9 @@ public class Article extends BaseEntity {
         for (ArticleHashtag articleHashtag : articleHashtags) {
             this.addArticleHashtag(articleHashtag);
         }
+    }
+
+    public void clearHashtags() {
+        this.articleHashtags.clear();
     }
 }

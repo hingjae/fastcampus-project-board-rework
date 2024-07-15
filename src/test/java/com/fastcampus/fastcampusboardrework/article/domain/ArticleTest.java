@@ -8,7 +8,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
@@ -73,19 +72,31 @@ class ArticleTest {
                 );
     }
 
+    @DisplayName("Article의 ArticleHashtags를 모두 지운다.")
+    @Test
+    public void clearArticleHashtags() {
+        Hashtag hashtag1 = getHashtag(1L, "hashtag1");
+        Hashtag hashtag2 = getHashtag(2L, "hashtag2");
+        List<Hashtag> hashtags = List.of(hashtag1, hashtag2);
+        List<ArticleHashtag> articleHashtags = getArticleHashtags(hashtags);
+        Article article = getArticle(getUserAccount("user1", "email"));
+        article.addArticleHashtags(articleHashtags);
+
+        article.clearHashtags();
+
+        assertThat(article.getArticleHashtags()).isEmpty();
+    }
+
     private List<ArticleHashtag> getArticleHashtags(List<Hashtag> hashtags) {
-        Long id = 1L;
         List<ArticleHashtag> articleHashtags = new ArrayList<>();
         for (Hashtag hashtag : hashtags) {
-            articleHashtags.add(getArticleHashtag(hashtag, id));
-            id++;
+            articleHashtags.add(getArticleHashtag(hashtag));
         }
         return articleHashtags;
     }
 
-    private ArticleHashtag getArticleHashtag(Hashtag hashtag, Long id) {
+    private ArticleHashtag getArticleHashtag(Hashtag hashtag) {
         return ArticleHashtag.builder()
-                .id(id)
                 .hashtag(hashtag)
                 .build();
     }
@@ -102,7 +113,7 @@ class ArticleTest {
                 .userAccount(userAccount)
                 .title("test title")
                 .content("test content")
-                .articleHashtags(new LinkedHashSet<>())
+                .articleHashtags(new ArrayList<>())
                 .build();
     }
 

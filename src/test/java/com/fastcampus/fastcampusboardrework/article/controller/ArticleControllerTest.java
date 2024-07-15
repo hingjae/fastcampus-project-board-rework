@@ -186,7 +186,7 @@ class ArticleControllerTest {
     @Test
     public void getModifyArticleFormPage() throws Exception {
         given(articleService.getByIdWithUserAccount(1L))
-                .willReturn(getArticleDto());
+                .willReturn(getModifyArticleDto());
 
         mvc.perform(get("/articles/{articleId}/form", 1L))
                 .andExpect(status().isOk())
@@ -195,6 +195,14 @@ class ArticleControllerTest {
                 .andExpect(model().attributeExists("formStatus"))
                 .andExpect(view().name("articles/form"))
                 .andDo(print());
+    }
+
+    private ModifyArticleDto getModifyArticleDto() {
+        return ModifyArticleDto.builder()
+                .id(1L)
+                .title("title")
+                .content("content")
+                .build();
     }
 
     @DisplayName("SaveArticleRequest 로 게시글을 수정한다.")

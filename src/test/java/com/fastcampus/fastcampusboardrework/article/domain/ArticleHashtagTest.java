@@ -6,14 +6,15 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Set;
 
 class ArticleHashtagTest {
-    @DisplayName("List<hashtag>로 List<ArticleHashtag>를 생성한다.")
+    @DisplayName("Set<hashtag>로 List<ArticleHashtag>를 생성한다.")
     @Test
     public void toArticleHashtagList() {
         Hashtag hashtag1 = getHashtag(1L, "hashtag1");
         Hashtag hashtag2 = getHashtag(2L, "hashtag2");
-        List<Hashtag> hashtags = List.of(hashtag1, hashtag2);
+        Set<Hashtag> hashtags = Set.of(hashtag1, hashtag2);
 
         List<ArticleHashtag> articleHashtags = ArticleHashtag.create(hashtags);
 

@@ -10,6 +10,7 @@ import com.fastcampus.fastcampusboardrework.article.service.dto.ModifyArticleDto
 import com.fastcampus.fastcampusboardrework.article.service.dto.ArticleWithCommentsDto;
 import com.fastcampus.fastcampusboardrework.hashtag.domain.Hashtag;
 import com.fastcampus.fastcampusboardrework.hashtag.service.HashtagService;
+import com.fastcampus.fastcampusboardrework.hashtag.util.HashtagUtils;
 import com.fastcampus.fastcampusboardrework.useraccount.domain.UserAccount;
 import com.fastcampus.fastcampusboardrework.useraccount.repository.UserAccountRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @Service
@@ -36,7 +38,7 @@ public class ArticleService {
 
     @Transactional(readOnly = true)
     public ArticleWithCommentsDto getArticleWithComments(Long articleId) {
-        Article article = articleRepository.findByIdWithUserAccountAndArticleComments(articleId)
+        Article article = articleRepository.findByIdWithUserAccountAndArticleCommentsAndHashtags(articleId)
                 .orElseThrow(() -> new EntityNotFoundException("Article not found"));
 
         return ArticleWithCommentsDto.from(article);
@@ -46,7 +48,10 @@ public class ArticleService {
     public Long create(String userId, CreateArticleDto dto) {
         UserAccount userAccount = userAccountRepository.findById(userId)
                 .orElseThrow(EntityNotFoundException::new);
-        List<Hashtag> hashtags = hashtagService.createByHashtagNames(List.of(dto.hashtagNames()));
+
+        Set<String> hashtagNames = HashtagUtils.parseHashtagNames(dto.content());
+
+        Set<Hashtag> hashtags = hashtagService.createByHashtagNames(hashtagNames);
 
         List<ArticleHashtag> articleHashtags = ArticleHashtag.create(hashtags);
 
@@ -60,12 +65,23 @@ public class ArticleService {
 
     @Transactional
     public void modify(Long articleId, String userId, ModifyArticleDto dto) {
-        Article article = articleRepository.getReferenceById(articleId);
+        Article article = articleRepository.findById(articleId)
+                .orElseThrow(EntityNotFoundException::new);
         UserAccount userAccount = userAccountRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("UserAccount not found"));
 
         article.validateUserAccount(userAccount);
         article.modify(dto.title(), dto.content());
+
+        Set<String> hashtagNames = HashtagUtils.parseHashtagNames(dto.content());
+
+        article.clearHashtags();
+
+        Set<Hashtag> hashtags = hashtagService.createByHashtagNames(hashtagNames);
+
+        List<ArticleHashtag> articleHashtags = ArticleHashtag.create(hashtags);
+
+        article.addArticleHashtags(articleHashtags);
     }
 
     @Transactional
@@ -82,20 +98,18 @@ public class ArticleService {
         return articleRepository.count();
     }
 
-    //TODO : 해시테그 고도화 후 테스트 작성 필요함.
     public Page<ArticleDto> searchArticlesViaHashtag(String searchValue, Pageable pageable) {
         return articleRepository.findByHashtag(searchValue, pageable)
                 .map(ArticleDto::from);
     }
 
-    //TODO : 해시테그 고도화 후 테스트 작성 필요함.
     public List<String> getHashtags() {
         return articleRepository.findAllHashtagLimit100();
     }
 
-    public ArticleDto getByIdWithUserAccount(Long articleId) {
+    public ModifyArticleDto getByIdWithUserAccount(Long articleId) {
         return articleRepository.findByIdWithUserAccount(articleId)
-                .map(ArticleDto::from)
+                .map(ModifyArticleDto::from)
                 .orElseThrow(EntityNotFoundException::new);
     }
 }

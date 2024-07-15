@@ -12,13 +12,15 @@ public interface ArticleRepository extends JpaRepository<Article, Long>, Article
             " from Article a " +
             " left join fetch a.articleComments" +
             " left join fetch a.userAccount" +
-            " left join fetch a.articleHashtags" +
+            " left join fetch a.articleHashtags ah" +
+            " left join fetch ah.hashtag" +
             " where a.id = :id")
-    Optional<Article> findByIdWithUserAccountAndArticleComments(@Param("id") Long id);
+    Optional<Article> findByIdWithUserAccountAndArticleCommentsAndHashtags(@Param("id") Long id);
 
     @Query("select a" +
             " from Article a" +
-            " join fetch a.userAccount" +
+            " left join fetch a.userAccount" +
+            " left join a.articleHashtags" +
             " where a.id = :id")
     Optional<Article> findByIdWithUserAccount(@Param("id") Long id);
 
