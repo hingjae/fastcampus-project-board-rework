@@ -17,6 +17,7 @@ import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -41,7 +42,8 @@ class ArticleCommentControllerTest {
         Long articleId = 1L;
         ArticleCommentRequest request = getArticleCommentRequest(articleId);
 
-        willDoNothing().given(articleCommentService).create("userId", request.toDto());
+        given(articleCommentService.create("userId", request.toDto()))
+                .willReturn(1L);
 
         mvc.perform(post("/comments/new")
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -73,7 +75,7 @@ class ArticleCommentControllerTest {
                 .andDo(print());
     }
 
-    private static ArticleCommentRequest getArticleCommentRequest(Long articleId) {
+    private ArticleCommentRequest getArticleCommentRequest(Long articleId) {
         return ArticleCommentRequest.builder()
                 .articleId(articleId)
                 .content("content")

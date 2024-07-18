@@ -262,7 +262,7 @@ class ArticleControllerTest {
 
     private ArticleCommentDtos getArticleCommentsDto() {
         return ArticleCommentDtos.builder()
-                .items(Set.of())
+                .items(List.of())
                 .build();
     }
 

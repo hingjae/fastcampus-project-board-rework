@@ -60,7 +60,7 @@ class ArticleWithCommentsResponseTest {
 
     private ArticleCommentDtos getArticleCommentDtos() {
         return ArticleCommentDtos.builder()
-                .items(getArticleComments())
+                .items(List.of(getArticleComment()))
                 .build();
     }
 

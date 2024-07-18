@@ -20,6 +20,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -42,7 +43,7 @@ class ArticleCommentServiceTest {
         UserAccount userAccount = userAccountRepository.save(getUserAccount("userId"));
         Article article = articleRepository.save(getArticle(userAccount));
         flushAndClear();
-        CreateArticleCommentDto createArticleCommentDto = getCreateArticleCommentDto(article.getId());
+        CreateArticleCommentDto createArticleCommentDto = getCreateArticleCommentDto(article.getId(), null, "foo content");
 
         articleCommentService.create(userAccount.getUserId(), createArticleCommentDto);
 
@@ -52,10 +53,64 @@ class ArticleCommentServiceTest {
                 .containsExactly("foo content");
     }
 
-    private static CreateArticleCommentDto getCreateArticleCommentDto(Long articleId) {
+    @Transactional
+    @DisplayName("부모 댓글에 대댓글을 생성한다.")
+    @Test
+    public void createChildArticleComment2() {
+        UserAccount userAccount = userAccountRepository.save(getUserAccount("userId"));
+        Article article = articleRepository.save(getArticle(userAccount));
+        CreateArticleCommentDto parentComment = getCreateArticleCommentDto(article.getId(), null, "foo content");
+        Long parentCommentId = articleCommentService.create(userAccount.getUserId(), parentComment);
+
+        CreateArticleCommentDto childComment = getCreateArticleCommentDto(article.getId(), parentCommentId, "bar content");
+        Long childCommentId = articleCommentService.create(userAccount.getUserId(), childComment);
+        flushAndClear();
+
+        ArticleComment result = articleCommentRepository.findById(childCommentId)
+                .orElseThrow(EntityNotFoundException::new);
+        assertThat(result.getArticle().getId()).isEqualTo(article.getId());
+        assertThat(result.getUserAccount().getUserId()).isEqualTo(userAccount.getUserId());
+        assertThat(result.getContent()).isEqualTo("bar content");
+        assertThat(result.getParentComment().getId()).isEqualTo(parentCommentId);
+    }
+
+    @Transactional
+    @DisplayName("부모 댓글에 대댓글을 여러 개 생성한다.")
+    @Test
+    public void createChildArticleComment3() {
+        UserAccount userAccount = userAccountRepository.save(getUserAccount("userId"));
+        Article article = articleRepository.save(getArticle(userAccount));
+        CreateArticleCommentDto parentCommentDto = getCreateArticleCommentDto(article.getId(), null, "foo content");
+        Long parentCommentId = articleCommentService.create(userAccount.getUserId(), parentCommentDto);
+
+        ArticleComment savedParentComment = articleCommentRepository.findById(parentCommentId)
+                .orElseThrow(EntityNotFoundException::new);
+        CreateArticleCommentDto childComment1 = getCreateArticleCommentDto(article.getId(), parentCommentId, "child content1");
+        CreateArticleCommentDto childComment2 = getCreateArticleCommentDto(article.getId(), parentCommentId, "child content2");
+        Long childCommentId1 = articleCommentService.create(userAccount.getUserId(), childComment1);
+        Long childCommentId2 = articleCommentService.create(userAccount.getUserId(), childComment2);
+        flushAndClear();
+
+        ArticleComment parentArticleComment = articleCommentRepository.findById(parentCommentId)
+                .orElseThrow(EntityNotFoundException::new);
+
+        assertThat(parentArticleComment.getParentComment()).isEqualTo(null);
+        assertThat(parentArticleComment.getContent()).isEqualTo("foo content");
+        assertThat(parentArticleComment.getArticle().getId()).isEqualTo(article.getId());
+        assertThat(parentArticleComment.getUserAccount().getUserId()).isEqualTo(userAccount.getUserId());
+        assertThat(parentArticleComment.getChildren()).hasSize(2)
+                .extracting(ArticleComment::getParentComment, ArticleComment::getContent)
+                .containsExactlyInAnyOrder(
+                        Tuple.tuple(parentArticleComment, "child content1"),
+                        Tuple.tuple(parentArticleComment, "child content2")
+                );
+    }
+
+    private CreateArticleCommentDto getCreateArticleCommentDto(Long articleId, Long parentCommentId, String content) {
         return CreateArticleCommentDto.builder()
                 .articleId(articleId)
-                .content("foo content")
+                .parentCommentId(parentCommentId)
+                .content(content)
                 .build();
     }
 
@@ -65,7 +120,7 @@ class ArticleCommentServiceTest {
     public void getArticleWithComments() {
         Long articleId = initData();
 
-        Set<ArticleCommentDto> items = articleCommentService.getByArticleId(articleId).items();
+        List<ArticleCommentDto> items = articleCommentService.getByArticleId(articleId).items();
 
         assertThat(items).hasSize(2)
                 .extracting(ArticleCommentDto::content, item -> item.userAccountDto().userId(), item -> item.userAccountDto().nickname())

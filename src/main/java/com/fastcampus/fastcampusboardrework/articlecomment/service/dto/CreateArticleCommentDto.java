@@ -7,17 +7,23 @@ import lombok.Builder;
 
 public record CreateArticleCommentDto(
         Long articleId,
+        Long parentCommentId,
         String content
 ) {
     @Builder
     public CreateArticleCommentDto {
     }
 
-    public ArticleComment toEntity(Article article, UserAccount userAccount) {
+    public ArticleComment toEntity(Article article, UserAccount userAccount, ArticleComment parentComment) {
         return ArticleComment.builder()
                 .article(article)
                 .userAccount(userAccount)
+                .parentComment(parentComment)
                 .content(content)
                 .build();
+    }
+
+    public boolean hasParent() {
+        return parentCommentId != null;
     }
 }

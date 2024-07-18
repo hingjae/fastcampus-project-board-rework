@@ -5,6 +5,7 @@ import lombok.Builder;
 
 public record ArticleCommentRequest(
         Long articleId,
+        Long parentCommentId,
         String content
 ) {
     @Builder
@@ -14,6 +15,7 @@ public record ArticleCommentRequest(
     public CreateArticleCommentDto toDto() {
         return CreateArticleCommentDto.builder()
                 .articleId(articleId)
+                .parentCommentId(parentCommentId)
                 .content(content)
                 .build();
     }

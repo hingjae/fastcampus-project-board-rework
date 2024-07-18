@@ -4,7 +4,8 @@ import com.fastcampus.fastcampusboardrework.article.service.dto.ArticleWithComme
 import lombok.Builder;
 
 import java.time.LocalDateTime;
-import java.util.LinkedHashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -17,7 +18,7 @@ public record ArticleWithCommentsResponse(
         String content,
         Set<HashtagResponse> hashtags,
         LocalDateTime createdAt,
-        Set<ArticleCommentResponse> articleComments
+        List<ArticleCommentResponse> articleComments
 ) {
     @Builder
     public ArticleWithCommentsResponse {
@@ -37,10 +38,12 @@ public record ArticleWithCommentsResponse(
                                 .collect(Collectors.toSet())
                 )
                 .createdAt(articleWithComments.createdAt())
-                .articleComments(articleWithComments.articleComments().items()
-                        .stream()
-                        .map(ArticleCommentResponse::from)
-                        .collect(Collectors.toCollection(LinkedHashSet::new)))
+                .articleComments(
+                        articleWithComments.articleComments().items()
+                            .stream()
+                            .map(ArticleCommentResponse::from)
+                            .collect(Collectors.toCollection(ArrayList::new))
+                )
                 .build();
     }
 }

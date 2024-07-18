@@ -33,6 +33,8 @@ public class ArticleRepositoryImpl implements ArticleRepositoryCustom {
         List<Article> content = query
                 .selectFrom(article)
                 .leftJoin(article.userAccount, userAccount).fetchJoin()
+                .leftJoin(article.articleHashtags, articleHashtag).fetchJoin()
+                .leftJoin(articleHashtag.hashtag, hashtag).fetchJoin()
                 .where(keywordContains)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())

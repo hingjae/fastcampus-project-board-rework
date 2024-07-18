@@ -7,7 +7,10 @@ import com.fastcampus.fastcampusboardrework.useraccount.domain.UserAccount;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Set;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -25,18 +28,30 @@ public class ArticleComment extends BaseEntity {
     @Setter
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id")
-    private UserAccount userAccount; // 유저 정보 (ID)
+    private UserAccount userAccount;
+
+    @Setter
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_comment_id")
+    private ArticleComment parentComment;
+
+    @OrderBy("createdAt ASC")
+    @OneToMany(mappedBy = "parentComment")
+    private Set<ArticleComment> children = new LinkedHashSet<>();
 
     @Setter
     @Column(length = 1000)
     private String content;
 
     @Builder
-    public ArticleComment(Long id, Article article, UserAccount userAccount, String content) {
+    public ArticleComment(Long id, Article article, UserAccount userAccount, ArticleComment parentComment, Set<ArticleComment> children, String content, LocalDateTime createdAt) {
         this.id = id;
         this.article = article;
         this.userAccount = userAccount;
+        this.parentComment = parentComment;
+        this.children = children;
         this.content = content;
+        this.createdAt = createdAt;
     }
 
     @Override
@@ -63,5 +78,17 @@ public class ArticleComment extends BaseEntity {
 
     public void modify(String content) {
         this.content = content;
+    }
+
+    public Long getParentCommentId() {
+        return parentComment != null ? parentComment.getId() : null;
+    }
+
+    public boolean hasParentComment() {
+        return parentComment != null;
+    }
+
+    public boolean isRootComment() {
+        return parentComment == null;
     }
 }

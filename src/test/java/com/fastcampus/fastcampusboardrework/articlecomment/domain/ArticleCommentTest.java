@@ -47,8 +47,41 @@ class ArticleCommentTest {
                 .hasMessage("User Not Authorized");;
     }
 
-    private static ArticleComment getArticleComment(UserAccount userAccount, Article article) {
+    @DisplayName("부모 댓글이 있으면 getParentCommentId는 부모댓글Id를 반환한다.")
+    @Test
+    public void getParentCommentIdTest() {
+        UserAccount userAccount = getUserAccount("foo1", "fooEmail1");
+        Article article = getArticle(userAccount);
+        ArticleComment parentComment = getArticleComment(userAccount, article);
+        ArticleComment childComment = getArticleCommentWithParentComment(userAccount, article, parentComment);
+
+        Long parentCommentId = childComment.getParentCommentId();
+
+        assertThat(parentCommentId).isEqualTo(parentComment.getId());
+    }
+
+    @DisplayName("부모 댓글이 없으면 getParentCommentId는 null을 반환한다.")
+    @Test
+    public void getParentCommentIdNullTest() {
+        UserAccount userAccount = getUserAccount("foo1", "fooEmail1");
+        Article article = getArticle(userAccount);
+        ArticleComment comment = getArticleComment(userAccount, article);
+
+        assertThat(comment.getParentCommentId()).isNull();
+    }
+
+    private ArticleComment getArticleCommentWithParentComment(UserAccount userAccount, Article article, ArticleComment parentComment) {
         return ArticleComment.builder()
+                .userAccount(userAccount)
+                .article(article)
+                .parentComment(parentComment)
+                .content("foo comment")
+                .build();
+    }
+
+    private ArticleComment getArticleComment(UserAccount userAccount, Article article) {
+        return ArticleComment.builder()
+                .id(1L)
                 .userAccount(userAccount)
                 .article(article)
                 .content("foo comment")

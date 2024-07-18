@@ -38,7 +38,7 @@ public class ArticleService {
 
     @Transactional(readOnly = true)
     public ArticleWithCommentsDto getArticleWithComments(Long articleId) {
-        Article article = articleRepository.findByIdWithUserAccountAndArticleCommentsAndHashtags(articleId)
+        Article article = articleRepository.findByIdWithRelations(articleId)
                 .orElseThrow(() -> new EntityNotFoundException("Article not found"));
 
         return ArticleWithCommentsDto.from(article);

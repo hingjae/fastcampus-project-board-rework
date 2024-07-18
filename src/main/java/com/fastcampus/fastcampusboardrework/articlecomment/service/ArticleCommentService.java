@@ -2,7 +2,6 @@ package com.fastcampus.fastcampusboardrework.articlecomment.service;
 
 import com.fastcampus.fastcampusboardrework.article.domain.Article;
 import com.fastcampus.fastcampusboardrework.article.repository.ArticleRepository;
-import com.fastcampus.fastcampusboardrework.article.service.dto.ArticleCommentDto;
 import com.fastcampus.fastcampusboardrework.article.service.dto.ArticleCommentDtos;
 import com.fastcampus.fastcampusboardrework.articlecomment.domain.ArticleComment;
 import com.fastcampus.fastcampusboardrework.articlecomment.repository.ArticleCommentRepository;
@@ -22,20 +21,28 @@ public class ArticleCommentService {
     private final UserAccountRepository userAccountRepository;
     private final ArticleRepository articleRepository;
 
-
     @Transactional(readOnly = true)
     public ArticleCommentDtos getByArticleId(Long articleId) {
         return ArticleCommentDtos.from(articleCommentRepository.findByArticle_Id(articleId));
     }
 
     @Transactional
-    public void create(String userId, CreateArticleCommentDto dto) {
+    public Long create(String userId, CreateArticleCommentDto dto) {
         Article article = articleRepository.findById(dto.articleId())
                 .orElseThrow(EntityNotFoundException::new);
         UserAccount userAccount = userAccountRepository.findById(userId)
                 .orElseThrow(EntityNotFoundException::new);
 
-        articleCommentRepository.save(dto.toEntity(article, userAccount));
+        if (dto.hasParent()) {
+            ArticleComment articleComment = articleCommentRepository.findById(dto.parentCommentId())
+                    .orElseThrow(EntityNotFoundException::new);
+
+            return articleCommentRepository.save(dto.toEntity(article, userAccount, articleComment))
+                    .getId();
+        }
+
+        return articleCommentRepository.save(dto.toEntity(article, userAccount, null))
+                .getId();
     }
 
     @Transactional

@@ -10,12 +10,12 @@ import java.util.Optional;
 public interface ArticleRepository extends JpaRepository<Article, Long>, ArticleRepositoryCustom {
     @Query("select a " +
             " from Article a " +
-            " left join fetch a.articleComments" +
+            " left join fetch a.articleComments ac" +
             " left join fetch a.userAccount" +
             " left join fetch a.articleHashtags ah" +
             " left join fetch ah.hashtag" +
             " where a.id = :id")
-    Optional<Article> findByIdWithUserAccountAndArticleCommentsAndHashtags(@Param("id") Long id);
+    Optional<Article> findByIdWithRelations(@Param("id") Long id);
 
     @Query("select a" +
             " from Article a" +

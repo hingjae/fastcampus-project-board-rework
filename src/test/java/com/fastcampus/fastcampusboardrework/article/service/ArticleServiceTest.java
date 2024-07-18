@@ -101,6 +101,29 @@ class ArticleServiceTest {
     }
 
     @Transactional
+    @DisplayName("대댓글을 포함한 게시글을 상세 조회한다.")
+    @Test
+    public void getArticleWithHierarchicalComments() {
+        UserAccount userAccount = saveUser("user1", "aaa@bbb.com");
+        Article article = saveArticle(userAccount);
+        //TODO
+        ArticleComment articleComment1 = articleCommentRepository.save(getArticleComment(article, userAccount, null, "comment1"));
+        ArticleComment articleComment2 = articleCommentRepository.save(getArticleComment(article, userAccount, articleComment1, "comment2"));
+        ArticleComment articleComment3 = articleCommentRepository.save(getArticleComment(article, userAccount, articleComment1, "comment3"));
+        ArticleComment articleComment4 = articleCommentRepository.save(getArticleComment(article, userAccount, null, "comment4"));
+        ArticleComment articleComment5 = articleCommentRepository.save(getArticleComment(article, userAccount, articleComment4, "comment5"));
+        ArticleComment articleComment6 = articleCommentRepository.save(getArticleComment(article, userAccount, articleComment4, "comment6"));
+        flushAndClear();
+
+        ArticleWithCommentsDto articleWithComments = articleService.getArticleWithComments(article.getId());
+
+        ArticleCommentDtos result = articleWithComments.articleComments();
+        assertThat(result.items()).hasSize(2);
+        assertThat(result.items().get(0).childComments()).hasSize(2);
+        assertThat(result.items().get(1).childComments()).hasSize(2);
+    }
+
+    @Transactional
     @DisplayName("게시글을 수정 한다.")
     @Test
     public void modifyArticle() {
@@ -392,6 +415,15 @@ class ArticleServiceTest {
                 .id(1L)
                 .title("title")
                 .userAccount(getUser("user1", "email"))
+                .build();
+    }
+
+    private ArticleComment getArticleComment(Article article, UserAccount userAccount, ArticleComment parent, String content) {
+        return ArticleComment.builder()
+                .article(article)
+                .userAccount(userAccount)
+                .parentComment(parent)
+                .content(content)
                 .build();
     }
 
