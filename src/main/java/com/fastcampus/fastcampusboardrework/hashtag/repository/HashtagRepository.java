@@ -7,7 +7,5 @@ import java.util.List;
 import java.util.Set;
 
 public interface HashtagRepository extends JpaRepository<Hashtag, Long> {
-    boolean existsByHashtagName(String hashtagName);
-
     List<Hashtag> findByHashtagNameIn(Set<String> hashtagNames);
 }

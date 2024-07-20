@@ -33,7 +33,7 @@ public record ArticleCommentResponse(
                 .childComments(
                         Optional.ofNullable(articleCommentDto.childComments())
                                 .map(childComments -> childComments.stream()
-                                        .sorted(Comparator.comparing(ArticleCommentDto::createdAt).reversed())
+                                        .sorted(Comparator.comparing(ArticleCommentDto::createdAt))
                                         .map(ArticleCommentResponse::from)
                                         .collect(Collectors.toCollection(ArrayList::new)))
                                 .orElse(null)

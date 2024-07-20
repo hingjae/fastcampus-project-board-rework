@@ -5,8 +5,10 @@ import lombok.Builder;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -16,8 +18,9 @@ public record CustomUserDetails(
         Collection<? extends GrantedAuthority> authorities,
         String email,
         String nickname,
-        String memo
-) implements UserDetails {
+        String memo,
+        Map<String, Object> oAuth2attributes
+) implements UserDetails, OAuth2User {
 
     @Builder
     public CustomUserDetails {
@@ -73,5 +76,19 @@ public record CustomUserDetails(
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    @Override
+    public Map<String, Object> getAttributes() {
+        return oAuth2attributes;
+    }
+
+    @Override
+    public String getName() {
+        return username;
+    }
+
+    public String nickname() {
+        return nickname;
     }
 }

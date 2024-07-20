@@ -20,3 +20,6 @@
 - Article과 Hashtag의 관계 다대다 -> 일대다, 다대일
   - orphanRemoval 적용
 - 일급 컬렉션.
+- 소셜 로그인
+  - kakao
+  - google

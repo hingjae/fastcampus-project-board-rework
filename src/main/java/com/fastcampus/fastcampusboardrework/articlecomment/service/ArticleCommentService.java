@@ -57,7 +57,7 @@ public class ArticleCommentService {
 
     @Transactional
     public void delete(Long articleCommentId, String userId) {
-        ArticleComment articleComment = articleCommentRepository.findById(articleCommentId)
+        ArticleComment articleComment = articleCommentRepository.findByIdWithChildren(articleCommentId)
                 .orElseThrow(EntityNotFoundException::new);
         UserAccount userAccount = userAccountRepository.findById(userId)
                 .orElseThrow(EntityNotFoundException::new);

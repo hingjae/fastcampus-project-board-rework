@@ -165,6 +165,27 @@ class ArticleCommentServiceTest {
         assertThat(articleCommentOptional).isEmpty();
     }
 
+    @Transactional
+    @DisplayName("상위 댓글 삭제 시 대댓글도 삭제된다.")
+    @Test
+    public void deleteArticleCommentWithChildren() {
+        UserAccount userAccount = userAccountRepository.save(getUserAccount("userId"));
+        Article article = articleRepository.save(getArticle(userAccount));
+        ArticleComment rootArticleComment = articleCommentRepository.save(getArticleComment(userAccount, article, "root"));
+        ArticleComment child1 = articleCommentRepository.save(getArticleComment(userAccount, article, rootArticleComment, "child1"));
+        ArticleComment child2 = articleCommentRepository.save(getArticleComment(userAccount, article, rootArticleComment, "child2"));
+        flushAndClear();
+
+        articleCommentService.delete(rootArticleComment.getId(), userAccount.getUserId());
+
+        Optional<ArticleComment> articleCommentOptional = articleCommentRepository.findById(rootArticleComment.getId());
+        Optional<ArticleComment> child1Result = articleCommentRepository.findById(child1.getId());
+        Optional<ArticleComment> child2Result = articleCommentRepository.findById(child2.getId());
+        assertThat(articleCommentOptional).isEmpty();
+        assertThat(child1Result).isEmpty();
+        assertThat(child2Result).isEmpty();
+    }
+
 
     private ModifyArticleCommentDto getModifyArticleCommentDto(String content) {
         return ModifyArticleCommentDto.builder()
@@ -188,6 +209,15 @@ class ArticleCommentServiceTest {
         flushAndClear();
 
         return article.getId();
+    }
+
+    private ArticleComment getArticleComment(UserAccount userAccount, Article article, ArticleComment parentComment, String content) {
+        return ArticleComment.builder()
+                .userAccount(userAccount)
+                .article(article)
+                .parentComment(parentComment)
+                .content(content)
+                .build();
     }
 
     private ArticleComment getArticleComment(UserAccount userAccount, Article article, String content) {

@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -44,7 +43,7 @@ class ArticleCommentResponseTest {
         assertThat(response.content()).isEqualTo(comment1.content());
         assertThat(response.childComments()).hasSize(4)
                 .extracting(ArticleCommentResponse::content)
-                .containsExactly("comment5", "comment4", "comment3", "comment2");
+                .containsExactly("comment2", "comment3", "comment4", "comment5");
     }
 
     private ArticleCommentDto getArticleCommentDto(Long id, String content, LocalDateTime createdAt, List<ArticleCommentDto> children) {

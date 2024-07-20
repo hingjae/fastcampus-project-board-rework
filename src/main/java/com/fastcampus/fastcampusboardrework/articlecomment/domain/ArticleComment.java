@@ -36,7 +36,7 @@ public class ArticleComment extends BaseEntity {
     private ArticleComment parentComment;
 
     @OrderBy("createdAt ASC")
-    @OneToMany(mappedBy = "parentComment")
+    @OneToMany(mappedBy = "parentComment", cascade = CascadeType.REMOVE)
     private Set<ArticleComment> children = new LinkedHashSet<>();
 
     @Setter

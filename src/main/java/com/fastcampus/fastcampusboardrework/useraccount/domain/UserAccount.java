@@ -26,12 +26,13 @@ public class UserAccount extends BaseEntity implements Persistable<String> {
     @Setter private String memo;
 
     @Builder
-    public UserAccount(String userId, String userPassword, String email, String nickname, String memo) {
+    public UserAccount(String userId, String userPassword, String email, String nickname, String memo, String createdBy) {
         this.userId = userId;
         this.userPassword = userPassword;
         this.email = email;
         this.nickname = nickname;
         this.memo = memo;
+        this.createdBy = createdBy;
     }
 
     @Override

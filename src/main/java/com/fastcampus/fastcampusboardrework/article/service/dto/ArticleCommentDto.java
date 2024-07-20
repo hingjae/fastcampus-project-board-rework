@@ -5,7 +5,8 @@ import lombok.Builder;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
+
+import static java.util.Comparator.comparing;
 
 public record ArticleCommentDto(
         Long id,
@@ -46,10 +47,9 @@ public record ArticleCommentDto(
         List<ArticleCommentDto> childComments = Optional.ofNullable(groupedByParentId.get(this.id))
                 .orElse(Collections.emptyList())
                 .stream()
-                .sorted(Comparator.comparing(ArticleCommentDto::createdAt))
+                .sorted(comparing(ArticleCommentDto::createdAt))
                 .toList();
 
-        childComments.forEach(child -> child.setChildren(groupedByParentId));
         this.childComments.addAll(childComments);
     }
 }
