@@ -35,6 +35,7 @@ public class SecurityConfig {
         return http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
+                        .requestMatchers("/favicon.ico", "/error").permitAll()
                         .requestMatchers("/", "/articles", "/articles/search-hashtag").permitAll()
                         .anyRequest().authenticated()
                 )
